@@ -1,32 +1,82 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import React from 'react'
-import { AuthProvider } from './context/AuthContext'
-import Login from './pages/Login'
-import Register from './pages/Register'
-import Dashboard from './pages/Dashboard'
-import Products from './pages/Products'
-import CreateProduct from './pages/CreateProduct'
-import MyProducts from './pages/MyProducts'
-import PrivateRoute from './routes/PrivateRoute'
-import Home from './pages/Home'
+import React from "react"
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
+import { Toaster } from "react-hot-toast"
+import { AuthProvider } from "./contexts/AuthContext"
+import ProtectedRoute from "./components/common/ProtectedRoute"
+import Header from "./components/common/Header"
 
-export default function App() {
+// Pages
+import Home from "./pages/Home"
+import Login from "./pages/Login"
+import Register from "./pages/Register"
+
+// Farmer pages
+import Dashboard from "./pages/farmer/Dashboard"
+import Products from "./pages/farmer/Products"
+import CreateProduct from "./pages/farmer/CreateProduct"
+import Orders from "./pages/farmer/Orders"
+
+
+function App() {
   return (
-    <BrowserRouter>
+    <Router>
       <AuthProvider>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/login" element={<Login />} />
+        <div className="min-h-screen flex flex-col">
+          <Header />
 
-          <Route element={<PrivateRoute />}>
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/products" element={<Products />} />
-            <Route path="/create-product" element={<CreateProduct />} />
-            <Route path="/my-products" element={<MyProducts />} />
-          </Route>
-        </Routes>
+          <main className="flex-1">
+            <Routes>
+              {/* PUBLIC ROUTES */}
+              <Route path="/" element={<Home />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+
+              {/* FARMER ROUTES */}
+              <Route
+                path="/farmer/dashboard"
+                element={
+                  <ProtectedRoute allowedRoles={["farmer"]}>
+                    <Dashboard />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/farmer/products"
+                element={
+                  <ProtectedRoute allowedRoles={["farmer"]}>
+                    <Products />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/farmer/products/create"
+                element={
+                  <ProtectedRoute allowedRoles={["farmer"]}>
+                    <CreateProduct />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/farmer/orders"
+                element={
+                  <ProtectedRoute allowedRoles={["farmer"]}>
+                    <Orders />
+                  </ProtectedRoute>
+                }
+              />
+
+              
+            </Routes>
+          </main>
+
+          <Toaster position="top-right" />
+        </div>
       </AuthProvider>
-    </BrowserRouter>
+    </Router>
   )
 }
+
+export default App

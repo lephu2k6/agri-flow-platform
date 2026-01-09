@@ -10,14 +10,19 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.89.0",
+    "@hookform/resolvers": "^5.2.2",
+    "@supabase/supabase-js": "^2.90.1",
     "@tailwindcss/cli": "^4.1.18",
     "@tailwindcss/vite": "^4.1.18",
+    "date-fns": "^4.1.0",
     "lucide-react": "^0.562.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "react-router-dom": "^7.11.0",
-    "tailwindcss": "^4.1.18"
+    "react-hook-form": "^7.70.0",
+    "react-hot-toast": "^2.6.0",
+    "react-router-dom": "^7.12.0",
+    "tailwindcss": "^4.1.18",
+    "zod": "^4.3.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
