@@ -463,35 +463,40 @@ export const farmerService = {
   },
 
   // =============== HELPER METHODS ===============
-  async uploadProductImages(productId, imageFiles) {
-    const imageUrls = []
-    
-    for (const [index, file] of imageFiles.entries()) {
-      try {
-        const fileExt = file.name.split('.').pop()
-        const fileName = `${productId}/${Date.now()}-${index}.${fileExt}`
-        
-        const { error: uploadError } = await supabase.storage
-          .from('product-images')
-          .upload(fileName, file)
+  async uploadProductImages(productId, imageFiles, userId) {
+  const imageUrls = []
 
-        if (uploadError) {
-          console.error('Upload image error:', uploadError)
-          continue
-        }
+  for (const [index, file] of imageFiles.entries()) {
+    try {
+      const fileExt = file.name.split('.').pop()
 
-        const { data: { publicUrl } } = supabase.storage
-          .from('product-images')
-          .getPublicUrl(fileName)
+   
+      const filePath = `${userId}/products/${productId}/${Date.now()}-${index}.${fileExt}`
 
-        imageUrls.push(publicUrl)
-      } catch (error) {
-        console.error('Upload image error:', error)
+      const { error: uploadError } = await supabase.storage
+        .from("product-images")
+        .upload(filePath, file, {
+          cacheControl: "3600",
+          upsert: false,
+        })
+
+      if (uploadError) {
+        console.error("Upload image error:", uploadError)
+        continue
       }
+
+      const { data } = supabase.storage
+        .from("product-images")
+        .getPublicUrl(filePath)
+
+      imageUrls.push(data.publicUrl)
+    } catch (error) {
+      console.error("Upload image error:", error)
     }
-    
-    return imageUrls
-  },
+  }
+
+  return imageUrls
+},
 
   async updateProductQuantity(productId, quantity, operation = 'subtract') {
     try {

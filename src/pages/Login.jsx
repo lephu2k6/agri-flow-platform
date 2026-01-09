@@ -60,7 +60,7 @@ const Login = () => {
       // Redirect based on role
       setTimeout(() => {
         if (result.profile?.role === 'farmer') {
-          navigate('/dashboard', { replace: true })
+          navigate('/farmer/dashboard', { replace: true })
         } else if (result.profile?.role === 'buyer') {
           navigate('/products', { replace: true })
         } else {

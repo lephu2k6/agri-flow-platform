@@ -1,6 +1,7 @@
+import React from "react"
 import { createContext, useEffect, useState } from "react"
 import { supabase } from "../lib/supabase"
-import React from "react"
+
 export const AuthContext = createContext(null)
 
 export const AuthProvider = ({ children }) => {
@@ -10,28 +11,38 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const initAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      const currentUser = session?.user ?? null
-      setUser(currentUser)
+      try {
+        const { data } = await supabase.auth.getSession()
+        const currentUser = data.session?.user ?? null
+        setUser(currentUser)
 
-      if (currentUser) {
-        await fetchProfile(currentUser.id)
+        if (currentUser) {
+          await fetchProfile(currentUser.id)
+        }
+      } catch (err) {
+        console.error("Init auth error:", err)
+      } finally {
+        setLoading(false) // 🔥 BẮT BUỘC
       }
-
-      setLoading(false)
     }
 
     initAuth()
 
     const { data: { subscription } } =
       supabase.auth.onAuthStateChange(async (_event, session) => {
-        const currentUser = session?.user ?? null
-        setUser(currentUser)
+        try {
+          const currentUser = session?.user ?? null
+          setUser(currentUser)
 
-        if (currentUser) {
-          await fetchProfile(currentUser.id)
-        } else {
-          setProfile(null)
+          if (currentUser) {
+            await fetchProfile(currentUser.id)
+          } else {
+            setProfile(null)
+          }
+        } catch (err) {
+          console.error("Auth change error:", err)
+        } finally {
+          setLoading(false) // 🔥 BẮT BUỘC
         }
       })
 
@@ -39,40 +50,50 @@ export const AuthProvider = ({ children }) => {
   }, [])
 
   const fetchProfile = async (userId) => {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", userId)
-      .single()
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", userId)
+        .single()
 
-    if (!error) setProfile(data)
-    else console.error("Fetch profile error:", error)
+      if (error) throw error
+      setProfile(data)
+    } catch (err) {
+      console.error("Fetch profile error:", err)
+      setProfile(null) // 🔥 không để state bẩn
+    }
   }
 
-  const signUp = async (email, password, userData) => {
-    return supabase.auth.signUp({
+  const signUp = (email, password, userData) =>
+    supabase.auth.signUp({
       email,
       password,
       options: { data: userData }
     })
-  }
 
-  const signIn = async (email, password) => {
-    return supabase.auth.signInWithPassword({ email, password })
-  }
+  const signIn = (email, password) =>
+    supabase.auth.signInWithPassword({ email, password })
 
   const signOut = async () => {
     await supabase.auth.signOut()
+    setUser(null)
+    setProfile(null)
   }
 
   const updateProfile = async (updates) => {
-    const { error } = await supabase
-      .from("profiles")
-      .update(updates)
-      .eq("id", user.id)
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update(updates)
+        .eq("id", user.id)
 
-    if (!error) await fetchProfile(user.id)
-    return { error }
+      if (error) throw error
+      await fetchProfile(user.id)
+      return { error: null }
+    } catch (err) {
+      return { error: err }
+    }
   }
 
   return (
@@ -87,7 +108,7 @@ export const AuthProvider = ({ children }) => {
         updateProfile
       }}
     >
-      {!loading && children}
+      {children} {/* ❌ KHÔNG CHẶN RENDER */}
     </AuthContext.Provider>
   )
 }

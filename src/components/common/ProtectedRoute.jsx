@@ -1,7 +1,7 @@
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import { Loader2 } from 'lucide-react'
-
+import React from 'react'
 const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   const { user, profile, loading } = useAuth()
   const location = useLocation()

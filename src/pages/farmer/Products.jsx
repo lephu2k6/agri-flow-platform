@@ -25,6 +25,7 @@ const Products = () => {
     fetchProvinces()
   }, [filters])
 
+
   const fetchProducts = async () => {
     setLoading(true)
     try {
@@ -32,7 +33,7 @@ const Products = () => {
         .from('products')
         .select(`
           *,
-          profiles(full_name, phone, province, rating),
+          profiles(full_name, phone, province),
           categories(name),
           product_images(image_url, is_primary),
           orders(count)
@@ -318,12 +319,12 @@ const Products = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {products.map((product) => {
               const primaryImage = product.product_images?.find(img => img.is_primary)
-              const rating = product.profiles?.rating || 4.5
+              // const rating = product.profiles?.rating || 4.5
               
               return (
                 <div key={product.id} className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-lg transition-shadow duration-300">
                   {/* Product Image */}
-                  <Link to={`/products/${product.id}`}>
+                  <Link to={`/farmer/products/${product.id}`}>
                     <div className="relative h-48 overflow-hidden">
                       {primaryImage ? (
                         <img
@@ -364,9 +365,9 @@ const Products = () => {
                       <span>{product.province}</span>
                     </div>
                     
-                    {/* Rating */}
+                    Rating
                     <div className="flex items-center mb-3">
-                      <div className="flex">
+                      {/* <div className="flex">
                         {[...Array(5)].map((_, i) => (
                           <Star
                             key={i}
@@ -377,7 +378,7 @@ const Products = () => {
                             }`}
                           />
                         ))}
-                      </div>
+                      </div> */}
                       <span className="text-sm text-gray-600 ml-2">
                         ({product.orders?.count || 0})
                       </span>
@@ -399,7 +400,7 @@ const Products = () => {
                     {/* Actions */}
                     <div className="flex space-x-2">
                       <Link
-                        to={`/products/${product.id}`}
+                        to={`/farmer/products/${product.id}`}
                         className="flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 text-center font-medium"
                       >
                         Xem chi tiết

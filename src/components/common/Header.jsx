@@ -25,7 +25,7 @@ const Header = () => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
-            <Link to="/products" className="text-gray-600 hover:text-green-500">
+            <Link to="/farmer/products" className="text-gray-600 hover:text-green-500">
               Sản phẩm
             </Link>
             

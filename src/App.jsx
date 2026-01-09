@@ -14,8 +14,17 @@ import Register from "./pages/Register"
 import Dashboard from "./pages/farmer/Dashboard"
 import Products from "./pages/farmer/Products"
 import CreateProduct from "./pages/farmer/CreateProduct"
+import EditProduct from "./pages/farmer/EditProduct"  // NEW
+import ProductDetail from "./pages/farmer/ProductDetail"  // NEW
 import Orders from "./pages/farmer/Orders"
 
+// Public product pages
+// import PublicProducts from "./pages/products/Products"  // NEW
+// import PublicProductDetail from "./pages/products/ProductDetail"  // NEW
+
+// Common
+import NotFound from "./pages/NotFound"  // NEW
+import Profile from "./pages/Profile"  // NEW
 
 function App() {
   return (
@@ -30,6 +39,20 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              
+              {/* PUBLIC PRODUCT ROUTES */}
+              {/* <Route path="/products" element={<PublicProducts />} />
+              <Route path="/products/:id" element={<PublicProductDetail />} /> */}
+              
+              {/* USER PROFILE */}
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <Profile />
+                  </ProtectedRoute>
+                }
+              />
 
               {/* FARMER ROUTES */}
               <Route
@@ -59,6 +82,25 @@ function App() {
                 }
               />
 
+              {/* NEW FARMER PRODUCT ROUTES */}
+              <Route
+                path="/farmer/products/:id"
+                element={
+                  <ProtectedRoute allowedRoles={["farmer"]}>
+                    <ProductDetail />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/farmer/products/edit/:id"
+                element={
+                  <ProtectedRoute allowedRoles={["farmer"]}>
+                    <EditProduct />
+                  </ProtectedRoute>
+                }
+              />
+
               <Route
                 path="/farmer/orders"
                 element={
@@ -68,6 +110,18 @@ function App() {
                 }
               />
 
+              {/* BUYER ROUTES (Add if needed) */}
+              {/* <Route
+                path="/buyer/orders"
+                element={
+                  <ProtectedRoute allowedRoles={["buyer"]}>
+                    <BuyerOrders />
+                  </ProtectedRoute>
+                }
+              /> */}
+
+              {/* 404 NOT FOUND */}
+              <Route path="*" element={<NotFound />} />
               
             </Routes>
           </main>
