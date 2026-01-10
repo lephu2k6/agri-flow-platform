@@ -1,10 +1,6 @@
-import React from 'react'
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import {
-  Upload, X, Camera, Package, DollarSign,
-  MapPin, Info, Check, AlertCircle
-} from 'lucide-react'
+import { Upload, X, Camera, Check, AlertTriangle } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 import { farmerService } from '../../services/farmer.service'
@@ -12,7 +8,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { supabase } from '../../lib/supabase'
 
 const CreateProduct = () => {
-  const { user } = useAuth() // Thay đổi từ profile sang user
+  const { user } = useAuth()
   const navigate = useNavigate()
 
   const [loading, setLoading] = useState(false)
@@ -20,9 +16,13 @@ const CreateProduct = () => {
   const [imagePreviews, setImagePreviews] = useState([])
   const [categories, setCategories] = useState([])
   const [loadingCategories, setLoadingCategories] = useState(true)
-  
-  // Lấy profile từ user object
-  const profile = user?.profile || {}
+
+  // ĐỊNH NGHĨA DANH SÁCH TÊN SẢN PHẨM BẮT BUỘC CHỌN (Khớp với ảnh đề xuất)
+  const PRODUCT_OPTIONS = {
+    "Trái cây vỏ dày": ["Cam", "Bưởi", "Dứa (Thơm)", "Chuối xanh", "Dừa", "Sầu riêng"],
+    "Nông sản củ": ["Khoai lang", "Khoai mì (Sắn)", "Khoai môn", "Hành khô", "Tỏi"],
+    "Nông sản khô": ["Lúa tươi", "Lúa phơi", "Bắp (Ngô)", "Đậu phộng (Lạc)", "Đậu xanh", "Đậu đen"]
+  }
 
   const [formData, setFormData] = useState({
     title: '',
@@ -31,405 +31,188 @@ const CreateProduct = () => {
     quantity: '',
     unit: 'kg',
     price_per_unit: '',
-    province: profile?.province || '',
-    district: '',
-    quality_standard: '',
+    province: user?.user_metadata?.province || '',
     min_order_quantity: '1'
   })
 
-  const provinces = [
-    'Hà Nội', 'TP.HCM', 'Đà Nẵng', 'Cần Thơ', 'Hải Phòng',
-    'An Giang', 'Bình Dương', 'Đồng Nai', 'Long An', 'Tiền Giang',
-    'Bến Tre', 'Vĩnh Long', 'Đồng Tháp', 'Kiên Giang', 'Hậu Giang'
-  ]
+  const provinces = ['An Giang', 'Bến Tre', 'Cần Thơ', 'Đồng Tháp', 'Long An', 'Tiền Giang', 'Vĩnh Long', 'Hà Nội', 'TP.HCM']
 
-  const units = [
-    { value: 'kg', label: 'Kg' },
-    { value: 'tấn', label: 'Tấn' },
-    { value: 'bao', label: 'Bao' },
-    { value: 'thùng', label: 'Thùng' },
-    { value: 'quả', label: 'Quả' }
-  ]
-
-  const qualityStandards = [
-    'VietGAP', 'GlobalGAP', 'Hữu cơ', 'Loại 1', 'Xuất khẩu'
-  ]
-
-  /* ================= FETCH CATEGORIES ================= */
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         setLoadingCategories(true)
+        // Chỉ lấy những danh mục thuộc giai đoạn đầu (ID: 12, 13, 14 trong hình của bạn)
         const { data, error } = await supabase
           .from('categories')
           .select('id, name')
-          .order('name')
-
+          .in('name', ['Trái cây vỏ dày', 'Nông sản củ', 'Nông sản khô'])
+        
         if (error) throw error
         setCategories(data || [])
       } catch (err) {
-        console.error(err)
-        toast.error('Không tải được danh mục')
+        toast.error('Lỗi tải danh mục')
       } finally {
         setLoadingCategories(false)
       }
     }
-
     fetchCategories()
   }, [])
 
-  /* ================= HANDLERS ================= */
-  const handleChange = (e) => {
-    const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
+  const handleCategoryChange = (e) => {
+    setFormData({
+      ...formData,
+      category_id: e.target.value,
+      title: '' // Reset tên sản phẩm khi đổi nhóm
+    })
   }
 
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files)
-    if (files.length + images.length > 5) {
-      toast.error('Tối đa 5 ảnh')
-      return
-    }
-
-    const newImages = [...images, ...files]
-    setImages(newImages)
+    if (files.length + images.length > 5) return toast.error('Tối đa 5 ảnh')
     
-    // Tạo previews cho ảnh mới
+    setImages([...images, ...files])
     const newPreviews = files.map(f => URL.createObjectURL(f))
     setImagePreviews(prev => [...prev, ...newPreviews])
   }
 
   const removeImage = (index) => {
-    // Giải phóng URL object
     URL.revokeObjectURL(imagePreviews[index])
-    
     setImages(prev => prev.filter((_, i) => i !== index))
     setImagePreviews(prev => prev.filter((_, i) => i !== index))
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-
-    if (!user?.id) {
-      toast.error('Vui lòng đăng nhập')
-      navigate('/login')
-      return
-    }
-    
-    if (!images.length) {
-      toast.error('Cần ít nhất 1 ảnh')
-      return
-    }
+    if (!images.length) return toast.error('Cần ít nhất 1 ảnh')
+    if (!formData.title) return toast.error('Vui lòng chọn tên sản phẩm')
 
     setLoading(true)
     try {
-      const payload = {
-        ...formData,
-        farmer_id: user.id,
-        quantity: Number(formData.quantity),
-        price_per_unit: Number(formData.price_per_unit),
-        min_order_quantity: Number(formData.min_order_quantity) || 1
-      }
-
+      const payload = { ...formData, farmer_id: user.id }
       const res = await farmerService.createProduct(payload, images)
-
       if (res.success) {
-        toast.success(res.message || 'Đăng sản phẩm thành công')
+        toast.success('Đăng bán thành công!')
         navigate('/farmer/products')
       } else {
-        toast.error(res.error || 'Đăng sản phẩm thất bại')
+        toast.error(res.error)
       }
     } catch (err) {
-      console.error('Submit error:', err)
-      toast.error(err.message || 'Có lỗi xảy ra khi đăng sản phẩm')
+      toast.error('Có lỗi xảy ra')
     } finally {
       setLoading(false)
     }
   }
 
-  // Cleanup khi component unmount
-  useEffect(() => {
-    return () => {
-      // Giải phóng tất cả object URLs
-      imagePreviews.forEach(url => URL.revokeObjectURL(url))
-    }
-  }, [])
+  // Lấy danh sách tên sản phẩm dựa trên danh mục đã chọn
+  const selectedCatObj = categories.find(c => String(c.id) === String(formData.category_id))
+  const availableTitles = selectedCatObj ? PRODUCT_OPTIONS[selectedCatObj.name] : []
 
-  /* ================= RENDER ================= */
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-6">
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Đăng sản phẩm mới</h1>
-          <p className="text-gray-600 mt-2">Điền đầy đủ thông tin sản phẩm của bạn</p>
+    <div className="min-h-screen bg-gray-50 py-8 px-4">
+      <div className="max-w-3xl mx-auto">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="bg-green-600 p-2 rounded-xl text-white">
+            <Check size={24} strokeWidth={3}/>
+          </div>
+          <h1 className="text-2xl font-black text-gray-800 uppercase italic tracking-tight">Đăng bán nông sản</h1>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-
-          {/* Images Section */}
-          <section className="bg-white p-4 md:p-6 rounded-xl shadow">
-            <h3 className="font-semibold text-lg mb-4 flex items-center text-gray-800">
-              <Camera className="mr-2 text-green-500" size={20} /> Hình ảnh sản phẩm
-            </h3>
-            <p className="text-gray-600 text-sm mb-4">Tối đa 5 ảnh. Ảnh đầu tiên sẽ là ảnh đại diện.</p>
-
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+          {/* SECTION: HÌNH ẢNH */}
+          <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+            <label className="block text-xs font-black uppercase text-gray-400 mb-4 tracking-widest">Hình ảnh thực tế (Tối đa 5)</label>
+            <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
               {imagePreviews.map((src, i) => (
-                <div key={i} className="relative group">
-                  <img 
-                    src={src} 
-                    alt={`Preview ${i + 1}`}
-                    className="h-32 w-full object-cover rounded-lg"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeImage(i)}
-                    className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <X size={14} />
-                  </button>
-                  {i === 0 && (
-                    <span className="absolute top-1 left-1 bg-blue-500 text-white text-xs px-2 py-1 rounded">
-                      Ảnh chính
-                    </span>
-                  )}
+                <div key={i} className="relative aspect-square">
+                  <img src={src} className="w-full h-full object-cover rounded-2xl border" alt="preview" />
+                  <button type="button" onClick={() => removeImage(i)} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1"><X size={12}/></button>
                 </div>
               ))}
-
               {imagePreviews.length < 5 && (
-                <label className="border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center h-32 cursor-pointer hover:border-green-500 transition-colors">
-                  <Upload className="text-gray-400 mb-2" size={24} />
-                  <span className="text-sm text-gray-500">Tải ảnh lên</span>
-                  <span className="text-xs text-gray-400">JPG, PNG (max 5MB)</span>
-                  <input 
-                    type="file" 
-                    multiple 
-                    accept="image/*" 
-                    hidden 
-                    onChange={handleImageChange} 
-                  />
+                <label className="aspect-square border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:bg-green-50 transition-all">
+                  <Camera className="text-gray-300" />
+                  <input type="file" multiple accept="image/*" hidden onChange={handleImageChange} />
                 </label>
               )}
             </div>
-          </section>
-
-          {/* Basic Info Section */}
-          <section className="bg-white p-4 md:p-6 rounded-xl shadow">
-            <h3 className="font-semibold text-lg mb-4 flex items-center text-gray-800">
-              <Info className="mr-2 text-blue-500" size={20} /> Thông tin cơ bản
-            </h3>
-            
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Tên sản phẩm *
-                </label>
-                <input
-                  name="title"
-                  placeholder="Ví dụ: Cam sành Đồng Tháp"
-                  value={formData.title}
-                  onChange={handleChange}
-                  required
-                  minLength={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Danh mục *
-                </label>
-                <select
-                  name="category_id"
-                  value={formData.category_id}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                >
-                  <option value="">
-                    {loadingCategories ? 'Đang tải danh mục...' : '-- Chọn danh mục --'}
-                  </option>
-                  {categories.map(c => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Mô tả sản phẩm
-                </label>
-                <textarea
-                  name="description"
-                  placeholder="Mô tả chi tiết về sản phẩm (xuất xứ, chất lượng, cách bảo quản...)"
-                  value={formData.description}
-                  onChange={handleChange}
-                  rows={4}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                />
-              </div>
-            </div>
-          </section>
-
-          {/* Quantity & Price Section */}
-          <section className="bg-white p-4 md:p-6 rounded-xl shadow">
-            <h3 className="font-semibold text-lg mb-4 flex items-center text-gray-800">
-              <DollarSign className="mr-2 text-yellow-500" size={20} /> Số lượng & Giá cả
-            </h3>
-            
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Số lượng *
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="number"
-                    name="quantity"
-                    placeholder="0"
-                    value={formData.quantity}
-                    onChange={handleChange}
-                    min="0.1"
-                    step="0.1"
-                    required
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  />
-                  <select
-                    name="unit"
-                    value={formData.unit}
-                    onChange={handleChange}
-                    className="w-32 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  >
-                    {units.map(unit => (
-                      <option key={unit.value} value={unit.value}>
-                        {unit.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Giá mỗi đơn vị (VND) *
-                </label>
-                <input
-                  type="number"
-                  name="price_per_unit"
-                  placeholder="0"
-                  value={formData.price_per_unit}
-                  onChange={handleChange}
-                  min="1000"
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Đơn hàng tối thiểu
-                </label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="number"
-                    name="min_order_quantity"
-                    value={formData.min_order_quantity}
-                    onChange={handleChange}
-                    min="1"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  />
-                  <span className="text-gray-600 whitespace-nowrap">{formData.unit}</span>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Tiêu chuẩn chất lượng
-                </label>
-                <select
-                  name="quality_standard"
-                  value={formData.quality_standard}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                >
-                  <option value="">-- Không yêu cầu --</option>
-                  {qualityStandards.map(standard => (
-                    <option key={standard} value={standard}>{standard}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </section>
-
-          {/* Location Section */}
-          <section className="bg-white p-4 md:p-6 rounded-xl shadow">
-            <h3 className="font-semibold text-lg mb-4 flex items-center text-gray-800">
-              <MapPin className="mr-2 text-red-500" size={20} /> Địa điểm
-            </h3>
-            
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Tỉnh/Thành phố *
-                </label>
-                <select
-                  name="province"
-                  value={formData.province}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                >
-                  <option value="">-- Chọn tỉnh/thành phố --</option>
-                  {provinces.map(province => (
-                    <option key={province} value={province}>{province}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Quận/Huyện
-                </label>
-                <input
-                  type="text"
-                  name="district"
-                  placeholder="Ví dụ: Châu Thành"
-                  value={formData.district}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                />
-              </div>
-            </div>
-          </section>
-
-          {/* Submit Buttons */}
-          <div className="flex flex-col md:flex-row justify-end gap-3 pt-6 border-t">
-            <button
-              type="button"
-              onClick={() => navigate('/farmer/products')}
-              className="px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-medium"
-            >
-              Hủy
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium flex items-center justify-center"
-            >
-              {loading ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Đang xử lý...
-                </>
-              ) : (
-                <>
-                  <Check className="mr-2" size={18} />
-                  Đăng sản phẩm
-                </>
-              )}
-            </button>
           </div>
 
+          {/* SECTION: THÔNG TIN LỰA CHỌN */}
+          <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 grid md:grid-cols-2 gap-6">
+            
+            {/* 1. CHỌN NHÓM (DỮ LIỆU TỪ SUPABASE) */}
+            <div>
+              <label className="block text-xs font-black uppercase text-gray-500 mb-2">1. Nhóm nông sản *</label>
+              <select 
+                value={formData.category_id} 
+                onChange={handleCategoryChange} 
+                required
+                className="w-full p-4 bg-gray-50 border-none rounded-2xl font-bold focus:ring-2 focus:ring-green-500 outline-none"
+              >
+                <option value="">{loadingCategories ? 'Đang tải...' : '-- Chọn nhóm --'}</option>
+                {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </div>
+
+            {/* 2. CHỌN TÊN (BẮT BUỘC TỪ DANH SÁCH) */}
+            <div>
+              <label className="block text-xs font-black uppercase text-gray-500 mb-2">2. Tên sản phẩm *</label>
+              <select 
+                name="title"
+                value={formData.title} 
+                onChange={(e) => setFormData({...formData, title: e.target.value})} 
+                required
+                disabled={!formData.category_id}
+                className={`w-full p-4 border-none rounded-2xl font-bold focus:ring-2 focus:ring-green-500 outline-none ${!formData.category_id ? 'bg-gray-100 opacity-50' : 'bg-gray-50'}`}
+              >
+                <option value="">-- Chọn tên --</option>
+                {availableTitles?.map(name => (
+                  <option key={name} value={name}>{name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-black uppercase text-gray-500 mb-2">Giá bán (đ/kg) *</label>
+              <input type="number" name="price_per_unit" value={formData.price_per_unit} onChange={(e) => setFormData({...formData, price_per_unit: e.target.value})} required className="w-full p-4 bg-gray-50 border-none rounded-2xl font-bold text-green-600 outline-none" placeholder="0" />
+            </div>
+
+            <div>
+              <label className="block text-xs font-black uppercase text-gray-500 mb-2">Sản lượng sẵn có *</label>
+              <div className="flex gap-2">
+                <input type="number" name="quantity" value={formData.quantity} onChange={(e) => setFormData({...formData, quantity: e.target.value})} required className="flex-1 p-4 bg-gray-50 border-none rounded-2xl font-bold outline-none" placeholder="0" />
+                <select name="unit" value={formData.unit} onChange={(e) => setFormData({...formData, unit: e.target.value})} className="w-24 p-4 bg-gray-50 border-none rounded-2xl font-bold">
+                  <option value="kg">Kg</option>
+                  <option value="tấn">Tấn</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-xs font-black uppercase text-gray-500 mb-2">Khu vực vườn *</label>
+              <select name="province" value={formData.province} onChange={(e) => setFormData({...formData, province: e.target.value})} required className="w-full p-4 bg-gray-50 border-none rounded-2xl font-bold outline-none">
+                <option value="">-- Chọn tỉnh thành --</option>
+                {provinces.map(p => <option key={p} value={p}>{p}</option>)}
+              </select>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-4">
+            <div className="flex items-start gap-3 bg-amber-50 p-4 rounded-2xl border border-amber-100">
+              <AlertTriangle className="text-amber-600 flex-shrink-0" size={20}/>
+              <p className="text-[11px] text-amber-700 font-medium">
+                Sản phẩm đăng bán sẽ được kiểm duyệt dựa trên tiêu chuẩn vận chuyển an toàn (1-3 ngày). Hãy đảm bảo nông sản của bạn đúng với mô tả.
+              </p>
+            </div>
+
+            <button 
+              type="submit" 
+              disabled={loading}
+              className="w-full py-5 bg-green-600 text-white font-black rounded-3xl shadow-xl shadow-green-100 hover:bg-green-700 transition-all flex items-center justify-center gap-2 uppercase tracking-widest disabled:bg-gray-300"
+            >
+              {loading ? 'Đang xử lý...' : 'Xác nhận đăng bán'}
+            </button>
+          </div>
         </form>
       </div>
     </div>

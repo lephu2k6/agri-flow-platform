@@ -54,7 +54,7 @@ const Register = () => {
       toast.error('Email không hợp lệ') 
       return false
     }
-    
+      
     if (!ValidationService.validatePhone(phone)) {
       toast.error('Số điện thoại không hợp lệ. VD: 0987654321')
       return false
@@ -162,7 +162,7 @@ const Register = () => {
   ]
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-green-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 to-green-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-2xl w-full">
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
           <div className="md:flex">
@@ -513,7 +513,7 @@ const Register = () => {
                     <button
                       type="button"
                       onClick={nextStep}
-                      className="flex-1 py-3.5 px-4 border border-transparent rounded-xl text-base font-semibold text-white bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-200"
+                      className="flex-1 py-3.5 px-4 border border-transparent rounded-xl text-base font-semibold text-white bg-linear-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-200"
                     >
                       Tiếp theo →
                     </button>
@@ -521,7 +521,7 @@ const Register = () => {
                     <button
                       type="submit"
                       disabled={loading || !agreeTerms}
-                      className="flex-1 py-3.5 px-4 border border-transparent rounded-xl text-base font-semibold text-white bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                      className="flex-1 py-3.5 px-4 border border-transparent rounded-xl text-base font-semibold text-white bg-linear-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                     >
                       {loading ? (
                         <div className="flex items-center justify-center">
@@ -541,7 +541,7 @@ const Register = () => {
             </div>
 
             {/* Right Side - Info */}
-            <div className="md:w-1/3 bg-gradient-to-b from-green-500 to-green-600 p-8 text-white">
+            <div className="md:w-1/3 bg-linear-to-b from-green-500 to-green-600 p-8 text-white">
               <div className="h-full flex flex-col justify-center">
                 <div className="text-center">
                   <div className="h-16 w-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -570,7 +570,7 @@ const Register = () => {
 
                   <div className="bg-white/10 rounded-xl p-4">
                     <div className="flex items-start">
-                      <AlertCircle className="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" />
+                      <AlertCircle className="h-5 w-5 mr-2 mt-0.5 shrink-0" />
                       <div>
                         <p className="text-sm font-medium">Lưu ý quan trọng</p>
                         <p className="text-sm opacity-90 mt-1">

@@ -1,8 +1,17 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { ChevronLeft, ChevronRight, Star } from 'lucide-react'
 
 const ProductImageGallery = ({ images }) => {
   const [selectedIndex, setSelectedIndex] = useState(0)
+
+  // 1. Kiểm tra dữ liệu đầu vào
+  if (!images || images.length === 0) {
+    return (
+      <div className="aspect-square bg-gray-100 rounded-xl flex flex-col items-center justify-center text-gray-400 border-2 border-dashed">
+        <span className="text-sm">Không có hình ảnh cho sản phẩm này</span>
+      </div>
+    )
+  }
 
   const goToPrevious = () => {
     setSelectedIndex(prev => prev === 0 ? images.length - 1 : prev - 1)
@@ -12,75 +21,74 @@ const ProductImageGallery = ({ images }) => {
     setSelectedIndex(prev => prev === images.length - 1 ? 0 : prev + 1)
   }
 
-  if (!images || images.length === 0) return null
-
   return (
     <div className="space-y-4">
       {/* Main Image */}
-      <div className="relative bg-gray-100 rounded-xl overflow-hidden">
-        <div className="aspect-w-4 aspect-h-3">
-          <img
-            src={images[selectedIndex].url}
-            alt={`Product image ${selectedIndex + 1}`}
-            className="object-cover w-full h-full"
-          />
-        </div>
+      <div className="relative bg-white rounded-xl overflow-hidden aspect-square border shadow-sm">
+        <img
+          // Đảm bảo dùng đúng key từ database (image_url)
+          src={images[selectedIndex]?.image_url}
+          alt={`Product image ${selectedIndex + 1}`}
+          className="object-contain w-full h-full transition-all duration-500 ease-in-out"
+          // Dự phòng nếu link ảnh chết
+          onError={(e) => {
+            e.target.src = 'https://via.placeholder.com/400?text=Image+Error';
+          }}
+        />
         
         {/* Navigation Arrows */}
         {images.length > 1 && (
-          <>
+          <div className="absolute inset-0 flex items-center justify-between p-4 opacity-0 hover:opacity-100 transition-opacity">
             <button
               onClick={goToPrevious}
-              className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white p-2 rounded-full shadow-lg transition-colors"
+              className="bg-white/90 hover:bg-white p-2 rounded-full shadow-lg text-gray-800 transition-transform hover:scale-110"
             >
               <ChevronLeft size={24} />
             </button>
             <button
               onClick={goToNext}
-              className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white p-2 rounded-full shadow-lg transition-colors"
+              className="bg-white/90 hover:bg-white p-2 rounded-full shadow-lg text-gray-800 transition-transform hover:scale-110"
             >
               <ChevronRight size={24} />
             </button>
-          </>
+          </div>
         )}
         
         {/* Primary Badge */}
-        {images[selectedIndex].isPrimary && (
-          <div className="absolute top-4 left-4 bg-blue-500 text-white px-3 py-1 rounded-full text-sm flex items-center">
-            <Star size={14} className="mr-1" />
+        {images[selectedIndex]?.is_primary && (
+          <div className="absolute top-4 left-4 bg-green-600 text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center shadow-md">
+            <Star size={10} className="mr-1 fill-current" />
             Ảnh chính
           </div>
         )}
         
         {/* Image Counter */}
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/60 text-white px-3 py-1 rounded-full text-sm">
+        <div className="absolute bottom-4 right-4 bg-black/60 backdrop-blur-md text-white px-2 py-0.5 rounded text-[10px]">
           {selectedIndex + 1} / {images.length}
         </div>
       </div>
 
       {/* Thumbnails */}
       {images.length > 1 && (
-        <div className="grid grid-cols-4 md:grid-cols-6 gap-2">
+        <div className="flex flex-wrap gap-2 pt-2">
           {images.map((image, index) => (
             <button
-              key={image.id}
+              key={image.id || index}
               onClick={() => setSelectedIndex(index)}
-              className={`relative rounded-lg overflow-hidden border-2 transition-all ${
+              className={`relative w-16 h-16 rounded-md overflow-hidden border-2 transition-all ${
                 selectedIndex === index
-                  ? 'border-green-500 ring-2 ring-green-200'
-                  : 'border-transparent hover:border-gray-300'
+                  ? 'border-green-500 ring-2 ring-green-100 scale-105'
+                  : 'border-gray-200 hover:border-gray-300 opacity-70 hover:opacity-100'
               }`}
             >
-              <div className="aspect-w-1 aspect-h-1">
-                <img
-                  src={image.url}
-                  alt={`Thumbnail ${index + 1}`}
-                  className="object-cover w-full h-full"
-                />
-              </div>
-              {image.isPrimary && (
-                <div className="absolute top-1 right-1">
-                  <Star className="h-3 w-3 text-yellow-500 fill-current" />
+              <img
+                src={image.image_url}
+                alt={`Thumbnail ${index + 1}`}
+                className="object-cover w-full h-full"
+              />
+              {image.is_primary && (
+                <div className="absolute top-0.5 right-0.5">
+                  <Star className="h-2 w-2 text-yellow-500 fill-current" />
                 </div>
               )}
             </button>

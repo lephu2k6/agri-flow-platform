@@ -5,7 +5,7 @@ import { z } from 'zod'
 import { Upload, X } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
-
+import React from 'react'
 const productSchema = z.object({
   title: z.string().min(1, 'Tên sản phẩm là bắt buộc'),
   category_id: z.number().min(1, 'Vui lòng chọn danh mục'),

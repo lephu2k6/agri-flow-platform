@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import toast from 'react-hot-toast'
 
@@ -6,28 +6,29 @@ export const useProducts = () => {
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(false)
   const [filters, setFilters] = useState({
-    category: null,
+    category_id: null,
     province: null,
-    search: ''
+    search: '',
+    sortBy: 'newest'
   })
 
-  const fetchProducts = async () => {
+  // 1. Fetch danh sách sản phẩm (Dùng useCallback để tránh re-render vô tận)
+  const fetchProducts = useCallback(async () => {
     setLoading(true)
     try {
       let query = supabase
         .from('products')
         .select(`
           *,
-          profiles(full_name, phone, province),
-          categories(name),
-          product_images(image_url, is_primary)
+          profiles:farmer_id (id, full_name, phone, province),
+          categories:category_id (id, name),
+          product_images (id, image_url, is_primary)
         `)
         .eq('status', 'available')
-        .order('created_at', { ascending: false })
 
-      // Apply filters
-      if (filters.category) {
-        query = query.eq('category_id', filters.category)
+      // Áp dụng bộ lọc
+      if (filters.category_id) {
+        query = query.eq('category_id', filters.category_id)
       }
       if (filters.province) {
         query = query.eq('province', filters.province)
@@ -36,84 +37,87 @@ export const useProducts = () => {
         query = query.ilike('title', `%${filters.search}%`)
       }
 
-      const { data, error } = await query
+      // Sắp xếp
+      const sortMap = {
+        newest: { col: 'created_at', asc: false },
+        price_low: { col: 'price_per_unit', asc: true },
+        price_high: { col: 'price_per_unit', asc: false }
+      }
+      const sort = sortMap[filters.sortBy] || sortMap.newest
+      query = query.order(sort.col, { ascending: sort.asc })
 
+      const { data, error } = await query
       if (error) throw error
+      
       setProducts(data || [])
     } catch (error) {
-      console.error('Error fetching products:', error)
-      toast.error('Lỗi khi tải sản phẩm')
+      console.error('Fetch error:', error)
+      toast.error('Không thể tải danh sách sản phẩm')
     } finally {
       setLoading(false)
     }
-  }
+  }, [filters])
 
-  const createProduct = async (productData, images) => {
+  // 2. Tạo sản phẩm mới kèm upload ảnh
+  const createProduct = async (productData, imageFiles) => {
     try {
-      // 1. Tạo sản phẩm
-      const { data: product, error: productError } = await supabase
+      setLoading(true)
+      
+      // B1: Chèn thông tin sản phẩm
+      const { data: product, error: pError } = await supabase
         .from('products')
         .insert([productData])
         .select()
         .single()
 
-      if (productError) throw productError
+      if (pError) throw pError
 
-      // 2. Upload ảnh
-      if (images && images.length > 0) {
-        const imagePromises = images.map(async (image, index) => {
-          const fileName = `${product.id}/${Date.now()}-${index}`
-          const { error: uploadError } = await supabase.storage
+      // B2: Upload ảnh lên Storage và lưu link vào DB
+      if (imageFiles && imageFiles.length > 0) {
+        const uploadPromises = imageFiles.map(async (file, index) => {
+          const fileExt = file.name.split('.').pop()
+          const fileName = `${product.id}/${Date.now()}-${index}.${fileExt}`
+          
+          const { error: uError } = await supabase.storage
             .from('product-images')
-            .upload(fileName, image)
+            .upload(fileName, file)
 
-          if (uploadError) throw uploadError
+          if (uError) throw uError
 
-          // Get public URL
           const { data: { publicUrl } } = supabase.storage
             .from('product-images')
             .getPublicUrl(fileName)
 
-          // Save to product_images table
-          return supabase
-            .from('product_images')
-            .insert({
-              product_id: product.id,
-              image_url: publicUrl,
-              is_primary: index === 0
-            })
+          return {
+            product_id: product.id,
+            image_url: publicUrl,
+            is_primary: index === 0 // Ảnh đầu tiên là ảnh chính
+          }
         })
 
-        await Promise.all(imagePromises)
+        const imagesToInsert = await Promise.all(uploadPromises)
+        const { error: iError } = await supabase
+          .from('product_images')
+          .insert(imagesToInsert)
+
+        if (iError) throw iError
       }
 
-      toast.success('Đăng sản phẩm thành công')
-      return { success: true, product }
+      toast.success('Đăng sản phẩm thành công!')
+      return { success: true, data: product }
     } catch (error) {
-      console.error('Error creating product:', error)
-      toast.error('Lỗi khi đăng sản phẩm')
+      console.error('Create error:', error)
+      toast.error(error.message || 'Lỗi khi đăng sản phẩm')
       return { success: false, error }
+    } finally {
+      setLoading(false)
     }
   }
 
-  const updateProduct = async (id, updates) => {
-    try {
-      const { error } = await supabase
-        .from('products')
-        .update(updates)
-        .eq('id', id)
-
-      if (error) throw error
-      toast.success('Cập nhật thành công')
-      return { success: true }
-    } catch (error) {
-      console.error('Error updating product:', error)
-      toast.error('Lỗi khi cập nhật')
-      return { success: false, error }
-    }
-  }
-
+  // 3. Xóa sản phẩm (Chuyển sang trạng thái archived)
   const deleteProduct = async (id) => {
+    if (!window.confirm('Bạn có chắc muốn xóa sản phẩm này?')) return
+    
     try {
       const { error } = await supabase
         .from('products')
@@ -121,18 +125,19 @@ export const useProducts = () => {
         .eq('id', id)
 
       if (error) throw error
+      setProducts(prev => prev.filter(p => p.id !== id))
       toast.success('Đã xóa sản phẩm')
       return { success: true }
     } catch (error) {
-      console.error('Error deleting product:', error)
-      toast.error('Lỗi khi xóa')
+      toast.error('Không thể xóa sản phẩm')
       return { success: false, error }
     }
   }
 
+  // Tự động fetch khi bộ lọc thay đổi
   useEffect(() => {
     fetchProducts()
-  }, [filters])
+  }, [fetchProducts])
 
   return {
     products,
@@ -140,7 +145,6 @@ export const useProducts = () => {
     filters,
     setFilters,
     createProduct,
-    updateProduct,
     deleteProduct,
     refetch: fetchProducts
   }
