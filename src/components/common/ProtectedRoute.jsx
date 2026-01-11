@@ -16,19 +16,19 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
     );
   }
 
-  // Chưa login
+
   if (!user) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Đã login nhưng yêu cầu role cụ thể
+ 
   if (allowedRoles.length > 0) {
-    // Nếu profile chưa load xong dù đã có user (hiếm khi xảy ra với code trên)
+
     if (!profile) return null; 
 
-    // Kiểm tra quyền
+
     if (!allowedRoles.includes(profile.role)) {
-      // Sai quyền: Nông dân vào Buyer hoặc ngược lại
+   
       const redirectPath = profile.role === 'farmer' ? '/farmer/dashboard' : '/products';
       return <Navigate to={redirectPath} replace />;
     }
