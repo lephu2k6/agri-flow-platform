@@ -1,5 +1,4 @@
-<img width="1562" height="861" alt="image" src="https://github.com/user-attachments/assets/54602f3a-94c1-4d8d-b734-ae0580ffe457" /># 🌾 AGRI-FLOW - Dòng Chảy Nông Sản
-
+# 🌾 AGRI-FLOW - Dòng Chảy Nông Sản
 **AGRI-FLOW** là nền tảng số kết nối giao dịch & logistics nông sản tại Việt Nam, giúp nông dân, hợp tác xã, doanh nghiệp thu mua và đơn vị vận chuyển tương tác trực tiếp, minh bạch và hiệu quả.
 
 ---
