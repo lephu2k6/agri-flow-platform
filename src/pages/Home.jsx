@@ -1,9 +1,17 @@
 import React from 'react';
 import { ArrowRight, Truck, BarChart3, ShieldCheck, Globe, MoveRight, Leaf, Users, Clock } from 'lucide-react';
+import { Link } from 'react-router-dom';
+
+const marqueeItems = [,
+  "HỖ TRỢ NÔNG DÂN VIỆT NAM",
+  "GIẢM LÃNG PHÍ THỰC PHẨM",
+  "TƯƠI NGON TỪ NÔNG TRẠI",
+  "GIAO HÀNG TẬN NHÀ",
+];
 
 export default function AgriFlowSimple() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-emerald-50/30 to-white text-gray-800 font-sans selection:bg-emerald-200">
+    <div className="min-h-screen bg-linear-to-r from-emerald-50/30 to-white text-gray-800 font-sans selection:bg-emerald-200">
       
       
       {/* Hero Section */}
@@ -25,9 +33,16 @@ export default function AgriFlowSimple() {
           </p>
           
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
-            <button className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white px-8 py-4 rounded-xl font-bold hover:from-emerald-600 hover:to-emerald-700 transition-all flex items-center gap-3 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
-              Tham gia ngay <ArrowRight size={18} />
-            </button>
+            {/* <button className="bg-linear-to-r from-emerald-500 to-emerald-600 text-white px-8 py-4 rounded-xl font-bold hover:from-emerald-600 hover:to-emerald-700 transition-all flex items-center gap-3 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+              Tham gia ngay
+               <ArrowRight size={18} />
+            </button> */}
+            <Link to="/register">
+             <button className="bg-linear-to-r from-emerald-500 to-emerald-600 text-white px-8 py-4 rounded-xl font-bold hover:from-emerald-600 hover:to-emerald-700 transition-all flex items-center gap-3 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                Tham gia ngay
+                <ArrowRight size={18} />
+               </button>
+             </Link>
             
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-full bg-sky-100 flex items-center justify-center">
@@ -43,7 +58,7 @@ export default function AgriFlowSimple() {
 
         {/* Hero Image */}
         <div className="order-1 lg:order-2 relative">
-          <div className="aspect-[4/5] bg-gradient-to-br from-emerald-100/50 to-sky-100/50 rounded-3xl overflow-hidden shadow-2xl border-4 border-white">
+          <div className="aspect-4/5 bg-linear-to-r from-emerald-100/50 to-sky-100/50 rounded-3xl overflow-hidden shadow-2xl border-4 border-white">
             <img 
               src="https://images.unsplash.com/photo-1605000797499-95a51c5269ae?q=80&w=2071&auto=format&fit=crop" 
               className="w-full h-full object-cover mix-blend-multiply opacity-90"
@@ -51,10 +66,10 @@ export default function AgriFlowSimple() {
             />
           </div>
           
-          {/* Floating Cards */}
-          <div className="absolute -bottom-6 -left-6 bg-white p-5 rounded-2xl shadow-2xl border border-emerald-100 max-w-[280px] animate-float">
+          {/* Floating Cards
+          <div className="absolute -bottom-6 -left-6 bg-white p-5 rounded-2xl shadow-2xl border border-emerald-100 max-w-70 animate-float">
             <div className="flex gap-4 items-center">
-              <div className="w-12 h-12 bg-gradient-to-br from-emerald-100 to-sky-100 rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-linear-to-r from-emerald-100 to-sky-100 rounded-xl flex items-center justify-center">
                 <Truck size={22} className="text-emerald-600" />
               </div>
               <div>
@@ -65,7 +80,7 @@ export default function AgriFlowSimple() {
             </div>
           </div>
           
-          <div className="absolute -top-6 -right-6 bg-white p-5 rounded-2xl shadow-2xl border border-sky-100 max-w-[240px] animate-float-delayed">
+          <div className="absolute -top-6 -right-6 bg-white p-5 rounded-2xl shadow-2xl border border-sky-100 max-w-60 animate-float-delayed">
             <div className="text-center">
               <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-sky-100 text-sky-600 mb-3">
                 <span className="font-bold">24</span>
@@ -73,12 +88,24 @@ export default function AgriFlowSimple() {
               <p className="text-xs font-bold text-gray-400 uppercase">Đơn vị vận chuyển</p>
               <p className="text-sm text-gray-600">Sẵn sàng kết nối</p>
             </div>
-          </div>
+          </div> */}
         </div>
       </section>
 
+         {/* Marquee */}
+      <div className="bg-emerald-600 py-4 overflow-hidden">
+        <div className="flex animate-marquee whitespace-nowrap">
+          {[...marqueeItems, ...marqueeItems].map((item, index) => (
+            <span key={index} className="text-white font-bold text-sm sm:text-base mx-8 flex items-center gap-3">
+              <Leaf className="w-4 h-4" />
+              {item}
+            </span>
+          ))}
+        </div>
+      </div>
+
       {/* Features Section */}
-      <section className="py-20 bg-gradient-to-b from-white to-emerald-50/30">
+      <section className="py-20 bg-linear-to-r from-white to-emerald-50/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-8">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
@@ -91,7 +118,7 @@ export default function AgriFlowSimple() {
           
           <div className="grid md:grid-cols-3 gap-8">
             <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-shadow border border-emerald-50 group hover:border-emerald-100">
-              <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-emerald-100 to-emerald-50 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+              <div className="w-16 h-16 rounded-xl bg-linear-to-r from-emerald-100 to-emerald-50 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                 <BarChart3 size={28} className="text-emerald-600" />
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-4">Điều phối Cung - Cầu</h3>
@@ -104,7 +131,7 @@ export default function AgriFlowSimple() {
             </div>
             
             <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-shadow border border-sky-50 group hover:border-sky-100">
-              <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-sky-100 to-sky-50 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+              <div className="w-16 h-16 rounded-xl bg-linear-to-r from-sky-100 to-sky-50 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                 <Globe size={28} className="text-sky-600" />
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-4">Tối ưu Vận tải</h3>
@@ -117,7 +144,7 @@ export default function AgriFlowSimple() {
             </div>
             
             <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-shadow border border-emerald-50 group hover:border-emerald-100">
-              <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-amber-100 to-amber-50 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+              <div className="w-16 h-16 rounded-xl bg-linear-to-r from-amber-100 to-amber-50 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                 <ShieldCheck size={28} className="text-amber-600" />
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-4">Giao dịch An toàn</h3>
@@ -133,7 +160,7 @@ export default function AgriFlowSimple() {
       </section>
 
       {/* Footer */}
-      <footer className="py-16 px-4 sm:px-8 bg-gradient-to-r from-emerald-900 to-emerald-800 text-white">
+      <footer className="py-16 px-4 sm:px-8 bg-linear-to-r from-emerald-900 to-emerald-800 text-white">
         <div className="max-w-7xl mx-auto">
           <div className="grid md:grid-cols-4 gap-12 mb-12">
             <div>
@@ -214,7 +241,21 @@ export default function AgriFlowSimple() {
         .animate-float-delayed {
           animation: float 6s ease-in-out infinite 1.5s;
         }
+        @keyframes marquee {
+          0% { transform: translateX(0); }
+         100% { transform: translateX(-50%); }
+        }
+        .animate-marquee {
+        animation: marquee 30s linear infinite;
+        }
       `}</style>
     </div>
+
   );
 }
+
+
+
+
+
+

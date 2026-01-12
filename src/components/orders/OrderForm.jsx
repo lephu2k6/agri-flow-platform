@@ -13,6 +13,8 @@ const OrderForm = ({ product, initialQuantity, onClose, onSuccess }) => {
 
   const [formData, setFormData] = useState({
     quantity: initialQuantity || 1,
+    full_name: '',
+    phone_number: '',
     delivery_address: '',
     delivery_province: '',
     delivery_district: '',
@@ -55,6 +57,8 @@ const OrderForm = ({ product, initialQuantity, onClose, onSuccess }) => {
         unit: product.unit,
         unit_price: currentUnitPrice,
         total_amount: orderQty * currentUnitPrice,
+        full_name: formData.full_name,
+        phone_number: formData.phone_number,
         delivery_address: formData.delivery_address,
         delivery_province: formData.delivery_province,
         delivery_district: formData.delivery_district,
@@ -160,9 +164,35 @@ const OrderForm = ({ product, initialQuantity, onClose, onSuccess }) => {
                 >
                   <option value="cash">Tiền mặt (COD)</option>
                   <option value="bank">Chuyển khoản</option>
+                  <option value="momo">Thanh toán 30%</option>
+                  <option value="zalo_pay">Thanh toán 50%</option>
+                  <option value="vn_pay">Thanh toán 70%</option>
+                  <option value="credit_card">Thanh toán 100%</option>
                 </select>
               </div>
             </div>
+            {/* Thông tin cá nhân */}
+            <div className="grid grid-cols-2 gap-4">
+              <input 
+                type="text" 
+                name="full_name" 
+                placeholder="Họ và tên người nhận" 
+                value={formData.full_name} 
+                onChange={handleChange} 
+                required 
+                className="w-full p-4 bg-gray-50 border-2 border-transparent focus:border-emerald-500 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 font-semibold" 
+              />
+              <input 
+                type="text" 
+                name="phone_number" 
+                placeholder="Số điện thoại người nhận" 
+                value={formData.phone_number} 
+                onChange={handleChange} 
+                required 
+                className="w-full p-4 bg-gray-50 border-2 border-transparent focus:border-emerald-500 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 font-semibold" 
+              />
+            </div>
+
 
             {/* Địa chỉ - Đồng bộ style input */}
             <div className="space-y-2">

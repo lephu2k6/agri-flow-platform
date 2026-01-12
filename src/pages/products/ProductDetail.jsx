@@ -235,7 +235,7 @@ const PublicProductDetail = () => {
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Vận chuyển</p>
-                      <p className="font-semibold text-emerald-600">Miễn phí</p>
+                      <p className="font-semibold text-emerald-600">Hệ thống gợi ý</p>
                     </div>
                   </div>
                 </div>
@@ -385,16 +385,21 @@ const PublicProductDetail = () => {
                 </div>
 
                 {/* Contact Info */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-500">Điện thoại:</span>
-                    <span className="font-medium text-gray-800">{product.profiles?.phone || 'Chưa cập nhật'}</span>
+                 <div className="space-y-3">
+                     <div className="flex items-center justify-between text-sm">
+                         <span className="text-gray-500">Điện thoại:</span>
+                            <span className="font-medium text-gray-800 italic">
+                               {product.profiles?.phone 
+                                    ? "**********" 
+                                    : 'Chưa cập nhật'}
+                             </span>
+                       </div>
+                              
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-500">Tham gia:</span>
+                          <span className="font-medium text-gray-800">6 tháng</span>
+                       </div>
                   </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-500">Tham gia:</span>
-                    <span className="font-medium text-gray-800">6 tháng</span>
-                  </div>
-                </div>
 
                 <button
                   onClick={() => navigate(`/farmers/${product.profiles?.id}`)}
