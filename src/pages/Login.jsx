@@ -155,27 +155,6 @@ const Login = () => {
                 </div>
               </div>
             </div>
-
-            {/* <div className="grid grid-cols-3 gap-4">
-              <div className="bg-green-400 p-4 rounded-xl border border-emerald-100 text-center">
-                <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-2">
-                  <span className="text-sm font-bold text-emerald-600"></span>
-                </div>
-                <p className="text-xs text-gray-600">Đơn vị vận chuyển</p>
-              </div>
-              <div className="bg-white/80 p-4 rounded-xl border border-sky-100 text-center">
-                <div className="w-8 h-8 rounded-full bg-sky-100 flex items-center justify-center mx-auto mb-2">
-                  <span className="text-sm font-bold text-sky-600">156</span>
-                </div>
-                <p className="text-xs text-gray-600">Nông dân tham gia</p>
-              </div>
-              <div className="bg-white/80 p-4 rounded-xl border border-amber-100 text-center">
-                <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-2">
-                  <span className="text-sm font-bold text-amber-600">89</span>
-                </div>
-                <p className="text-xs text-gray-600">Doanh nghiệp mua</p>
-              </div>
-            </div> */}
           </div>
         </div>
       </div>

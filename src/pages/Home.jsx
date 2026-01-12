@@ -33,10 +33,6 @@ export default function AgriFlowSimple() {
           </p>
           
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
-            {/* <button className="bg-linear-to-r from-emerald-500 to-emerald-600 text-white px-8 py-4 rounded-xl font-bold hover:from-emerald-600 hover:to-emerald-700 transition-all flex items-center gap-3 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
-              Tham gia ngay
-               <ArrowRight size={18} />
-            </button> */}
             <Link to="/register">
              <button className="bg-linear-to-r from-emerald-500 to-emerald-600 text-white px-8 py-4 rounded-xl font-bold hover:from-emerald-600 hover:to-emerald-700 transition-all flex items-center gap-3 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
                 Tham gia ngay
@@ -65,30 +61,6 @@ export default function AgriFlowSimple() {
               alt="Nông dân và nông sản" 
             />
           </div>
-          
-          {/* Floating Cards
-          <div className="absolute -bottom-6 -left-6 bg-white p-5 rounded-2xl shadow-2xl border border-emerald-100 max-w-70 animate-float">
-            <div className="flex gap-4 items-center">
-              <div className="w-12 h-12 bg-linear-to-r from-emerald-100 to-sky-100 rounded-xl flex items-center justify-center">
-                <Truck size={22} className="text-emerald-600" />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Đang vận chuyển</p>
-                <p className="text-base font-bold text-gray-800">12 tấn Bưởi Da Xanh</p>
-                <p className="text-xs text-emerald-600 font-semibold mt-1">Đà Nẵng → Hồ Chí Minh</p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="absolute -top-6 -right-6 bg-white p-5 rounded-2xl shadow-2xl border border-sky-100 max-w-60 animate-float-delayed">
-            <div className="text-center">
-              <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-sky-100 text-sky-600 mb-3">
-                <span className="font-bold">24</span>
-              </div>
-              <p className="text-xs font-bold text-gray-400 uppercase">Đơn vị vận chuyển</p>
-              <p className="text-sm text-gray-600">Sẵn sàng kết nối</p>
-            </div>
-          </div> */}
         </div>
       </section>
 

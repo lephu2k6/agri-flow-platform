@@ -230,27 +230,6 @@ const Register = () => {
               </div>
             </div>
 
-            {/* Stats */}
-            {/* <div className="grid grid-cols-3 gap-4">
-              <div className="bg-white/80 p-4 rounded-xl border border-emerald-100 text-center">
-                <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-2">
-                  <span className="text-sm font-bold text-emerald-600">500+</span>
-                </div>
-                <p className="text-xs text-gray-600">Người dùng tích cực</p>
-              </div>
-              <div className="bg-white/80 p-4 rounded-xl border border-sky-100 text-center">
-                <div className="w-10 h-10 rounded-full bg-sky-100 flex items-center justify-center mx-auto mb-2">
-                  <span className="text-sm font-bold text-sky-600">2.5K+</span>
-                </div>
-                <p className="text-xs text-gray-600">Giao dịch thành công</p>
-              </div>
-              <div className="bg-white/80 p-4 rounded-xl border border-amber-100 text-center">
-                <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-2">
-                  <span className="text-sm font-bold text-amber-600">98%</span>
-                </div>
-                <p className="text-xs text-gray-600">Hài lòng</p>
-              </div>
-            </div> */}
           </div>
         </div>
       </div>
