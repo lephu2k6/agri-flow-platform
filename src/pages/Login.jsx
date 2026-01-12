@@ -83,8 +83,8 @@ const Login = () => {
         password: 'Lll123456@' 
       },
       buyer: { 
-        email: 'nguoimua@demo.com', 
-        password: 'Demo@123' 
+        email: 'gatv3102006@gmail.com', 
+        password: 'Ll123456@' 
       }
     }
 
