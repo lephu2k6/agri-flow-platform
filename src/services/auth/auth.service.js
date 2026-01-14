@@ -16,7 +16,7 @@ class AuthService {
       if (emailExists) {
         throw new Error('Email đã được đăng ký')
       }
-
+      console.log(userData.email.trim())
       // 3. Sign up with Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: userData.email.trim(),

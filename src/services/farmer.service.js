@@ -105,7 +105,19 @@ export const farmerService = {
     
     return { success: !error, products: data || [], error: error?.message }
   },
-
+  async deleteProduct(productId) {
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .delete()
+        .eq('id', productId)
+        
+      if (error) throw error
+      return { success: true, data }
+    }catch (error) {
+      return { success: false, error: error.message }
+    }
+  } , 
   // =============== THỐNG KÊ DASHBOARD ===============
   async getFarmerStats(farmerId) {
     try {
