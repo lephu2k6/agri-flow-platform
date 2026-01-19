@@ -8,12 +8,9 @@ import {
 import toast from 'react-hot-toast';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabase';
-<<<<<<< HEAD
 import VideoUploader from '../../components/products/VideoUploader';
-=======
 import { farmerService } from '../../services/farmer.service';
 import DeleteConfirmationModal from '../../components/modals/DeleteConfirmationModal';
->>>>>>> c96e419563bbbe5cf86eb774ba45544f0c8ed5d6
 
 const EditProduct = () => {
   const { id } = useParams();
