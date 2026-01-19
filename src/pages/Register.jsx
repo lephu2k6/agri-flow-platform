@@ -173,12 +173,12 @@ const Register = () => {
   }
 
   return (
-    <div className="min-h-screen flex bg-gradient-to-br from-emerald-50 via-white to-sky-50">
+    <div className="min-h-screen w-full items-center justify-center flex bg-gradient-to-br from-emerald-50 via-white to-sky-50">
       {/* Left Panel - Illustration */}
       <div className="hidden lg:flex flex-1 flex-col items-center justify-center p-12 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-emerald-100/20 to-sky-100/20"></div>
         
-        <div className="relative z-10 max-w-lg w-full">
+        <div className="relative z-10 max-w-lg w-full flex flex-col justify-center">
           {/* Logo */}
           <div className="flex items-center gap-4 mb-10">
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-xl">
@@ -230,27 +230,6 @@ const Register = () => {
               </div>
             </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-4">
-              <div className="bg-white/80 p-4 rounded-xl border border-emerald-100 text-center">
-                <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-2">
-                  <span className="text-sm font-bold text-emerald-600">500+</span>
-                </div>
-                <p className="text-xs text-gray-600">Người dùng tích cực</p>
-              </div>
-              <div className="bg-white/80 p-4 rounded-xl border border-sky-100 text-center">
-                <div className="w-10 h-10 rounded-full bg-sky-100 flex items-center justify-center mx-auto mb-2">
-                  <span className="text-sm font-bold text-sky-600">2.5K+</span>
-                </div>
-                <p className="text-xs text-gray-600">Giao dịch thành công</p>
-              </div>
-              <div className="bg-white/80 p-4 rounded-xl border border-amber-100 text-center">
-                <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-2">
-                  <span className="text-sm font-bold text-amber-600">98%</span>
-                </div>
-                <p className="text-xs text-gray-600">Hài lòng</p>
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -632,7 +611,7 @@ const Register = () => {
                     <button
                       type="button"
                       onClick={nextStep}
-                      className="flex-1 py-3.5 px-4 border border-transparent rounded-xl text-base font-semibold text-white bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all duration-200 shadow-lg hover:shadow-xl"
+                      className="flex items-center justify-center flex-1 py-3.5 px-4  place-self-center border border-transparent rounded-xl text-base font-semibold text-white bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all duration-200 shadow-lg hover:shadow-xl"
                     >
                       Tiếp theo <ChevronRight className="ml-2 h-5 w-5" />
                     </button>

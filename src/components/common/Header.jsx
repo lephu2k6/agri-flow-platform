@@ -63,13 +63,13 @@ const Header = () => {
           {/* LOGO */}
           <Link to="/" className="flex items-center space-x-3 group">
             <div className="relative">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-md group-hover:shadow-lg transition-all group-hover:scale-105">
+              <div className="w-12 h-12 rounded-xl bg-linear-to-r from-emerald-500 to-emerald-600 flex items-center justify-center shadow-md group-hover:shadow-lg transition-all group-hover:scale-105">
                 <Package className="h-6 w-6 text-white" />
               </div>
               <div className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-400 rounded-full border-2 border-white"></div>
             </div>
             <div className="flex flex-col">
-              <span className="text-2xl font-black bg-gradient-to-r from-emerald-600 to-emerald-700 bg-clip-text text-transparent tracking-tight">
+              <span className="text-2xl font-black bg-linear-to-r from-emerald-600 to-emerald-700 bg-clip-text text-transparent tracking-tight">
                 AGRI-FLOW
               </span>
               <span className="text-[10px] text-emerald-500 font-medium uppercase tracking-wider">
@@ -137,7 +137,7 @@ const Header = () => {
                 </Link>
                 <Link 
                   to="/farmer/products/create" 
-                  className="ml-2 px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl shadow-md hover:shadow-lg transition-all flex items-center gap-2 font-semibold hover:from-emerald-600 hover:to-emerald-700"
+                  className="ml-2 px-4 py-2.5 bg-linear-to-r from-emerald-500 to-emerald-600 text-white rounded-xl shadow-md hover:shadow-lg transition-all flex items-center gap-2 font-semibold hover:from-emerald-600 hover:to-emerald-700"
                 >
                   <PlusCircle size={18}/>
                   Đăng bán
@@ -196,7 +196,7 @@ const Header = () => {
                     className="flex items-center space-x-3 px-3 py-1.5 hover:bg-emerald-50 rounded-xl transition-all"
                   >
                     <div className="relative">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-100 to-sky-100 flex items-center justify-center text-emerald-600 font-bold text-lg">
+                      <div className="w-10 h-10 rounded-full bg-linear-to-r from-emerald-100 to-sky-100 flex items-center justify-center text-emerald-600 font-bold text-lg">
                         {profile?.full_name?.charAt(0).toUpperCase() || "U"}
                       </div>
                       <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-400 rounded-full border-2 border-white"></div>
@@ -225,7 +225,7 @@ const Header = () => {
                 </Link>
                 <Link 
                   to="/register" 
-                  className="px-6 py-2.5 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl font-semibold hover:from-emerald-600 hover:to-emerald-700 shadow-md hover:shadow-lg transition-all"
+                  className="px-6 py-2.5 bg-linear-to-r from-emerald-500 to-emerald-600 text-white rounded-xl font-semibold hover:from-emerald-600 hover:to-emerald-700 shadow-md hover:shadow-lg transition-all"
                 >
                   Đăng ký
                 </Link>
@@ -249,7 +249,7 @@ const Header = () => {
             {user && (
               <div className="flex items-center justify-between p-4 bg-emerald-50 rounded-2xl">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-100 to-sky-100 flex items-center justify-center text-emerald-600 font-bold text-xl">
+                  <div className="w-12 h-12 rounded-full bg-linear-to-r from-emerald-100 to-sky-100 flex items-center justify-center text-emerald-600 font-bold text-xl">
                     {profile?.full_name?.charAt(0).toUpperCase() || "U"}
                   </div>
                   <div className="flex flex-col">
@@ -298,7 +298,7 @@ const Header = () => {
 
               {/* FARMER MENU */}
               {profile?.role === "farmer" && (
-                <div className="space-y-2 bg-gradient-to-b from-emerald-50/50 to-white p-4 rounded-2xl border border-emerald-100">
+                <div className="space-y-2 bg-linear-to-r from-emerald-50/50 to-white p-4 rounded-2xl border border-emerald-100">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center">
                       <Leaf size={16} className="text-emerald-600"/>
@@ -332,7 +332,7 @@ const Header = () => {
                   </Link>
                   <Link 
                     to="/farmer/products/create" 
-                    className="flex items-center gap-4 p-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl font-semibold mt-2"
+                    className="flex items-center gap-4 p-3 bg-linear-to-r from-emerald-500 to-emerald-600 text-white rounded-xl font-semibold mt-2"
                     onClick={closeMenu}
                   >
                     <PlusCircle size={18}/>
@@ -376,7 +376,7 @@ const Header = () => {
                 <>
                   <Link 
                     to="/login" 
-                    className="block py-3.5 text-center font-semibold bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl shadow-lg hover:shadow-xl transition-all"
+                    className="block py-3.5 text-center font-semibold bg-linear-to-r from-emerald-500 to-emerald-600 text-white rounded-xl shadow-lg hover:shadow-xl transition-all"
                     onClick={closeMenu}
                   >
                     Đăng nhập

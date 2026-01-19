@@ -8,7 +8,12 @@ import {
 import toast from 'react-hot-toast';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabase';
+<<<<<<< HEAD
 import VideoUploader from '../../components/products/VideoUploader';
+=======
+import { farmerService } from '../../services/farmer.service';
+import DeleteConfirmationModal from '../../components/modals/DeleteConfirmationModal';
+>>>>>>> c96e419563bbbe5cf86eb774ba45544f0c8ed5d6
 
 const EditProduct = () => {
   const { id } = useParams();
@@ -22,7 +27,8 @@ const EditProduct = () => {
   const [videoUrl, setVideoUrl] = useState(null);
   const [categories, setCategories] = useState([]);
   const [productStats, setProductStats] = useState(null);
-  
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     category_id: '',
@@ -43,6 +49,31 @@ const EditProduct = () => {
       fetchProductStats();
     }
   }, [id, user]);
+  const handleDeleteProduct = async () => {
+  try {
+    setDeleting(true);
+
+    // Thay vì .delete(), ta dùng .update() để ẩn sản phẩm đi
+    const { error } = await supabase
+      .from('products')
+      .update({ 
+        status: 'archived',
+        updated_at: new Date().toISOString() 
+      })
+      .eq('id', id)
+      .eq('farmer_id', user.id);
+
+    if (error) throw error;
+
+    toast.success('Sản phẩm đã được lưu trữ (ẩn khỏi cửa hàng)');
+    navigate('/farmer/products');
+  } catch (err) {
+    toast.error('Lỗi: ' + err.message);
+  } finally {
+    setDeleting(false);
+    setShowDeleteModal(false);
+  }
+};
 
   const fetchProduct = async () => {
     try {
@@ -505,31 +536,44 @@ const EditProduct = () => {
 
                   {/* Action Buttons */}
                   <div className="flex justify-between pt-8 border-t border-gray-100">
-                    <button
-                      type="button"
-                      onClick={() => navigate('/farmer/products')}
-                      className="px-8 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all"
-                    >
-                      Hủy bỏ
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={saving}
-                      className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl font-semibold hover:from-emerald-600 hover:to-emerald-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                    >
-                      {saving ? (
-                        <>
-                          <Loader2 className="animate-spin h-5 w-5" />
-                          Đang lưu...
-                        </>
-                      ) : (
-                        <>
-                          <Save size={20} />
-                          Lưu thay đổi
-                        </>
-                      )}
-                    </button>
-                  </div>
+  {/* Delete */}
+  <button
+    type="button"
+    onClick={() => setShowDeleteModal(true)}
+    className="px-8 py-3 border-2 border-red-500 text-red-600 rounded-xl font-semibold hover:bg-red-50 transition-all"
+  >
+    Xoá sản phẩm
+  </button>
+
+  {/* Save / Cancel */}
+  <div className="flex gap-3">
+    <button
+      type="button"
+      onClick={() => navigate('/farmer/products')}
+      className="px-8 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all"
+    >
+      Hủy bỏ
+    </button>
+
+    <button
+      type="submit"
+      disabled={saving}
+      className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl font-semibold hover:from-emerald-600 hover:to-emerald-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+    >
+      {saving ? (
+        <>
+          <Loader2 className="animate-spin h-5 w-5" />
+          Đang lưu...
+        </>
+      ) : (
+        <>
+          <Save size={20} />
+          Lưu thay đổi
+        </>
+      )}
+    </button>
+  </div>
+</div>
                 </form>
               </div>
             </div>
@@ -656,7 +700,19 @@ const EditProduct = () => {
           </div>
         </div>
       </div>
+      <DeleteConfirmationModal
+  isOpen={showDeleteModal}
+  onClose={() => setShowDeleteModal(false)}
+  onConfirm={handleDeleteProduct}
+  title="Xoá sản phẩm"
+  message="Bạn có chắc chắn muốn xoá sản phẩm này? Hành động này không thể hoàn tác."
+  confirmText="Xoá"
+  cancelText="Hủy"
+  isLoading={deleting}
+/>
+
     </div>
+    
   );
 };
 
