@@ -8,6 +8,7 @@ import {
 import toast from 'react-hot-toast';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabase';
+import VideoUploader from '../../components/products/VideoUploader';
 
 const EditProduct = () => {
   const { id } = useParams();
@@ -18,6 +19,7 @@ const EditProduct = () => {
   const [existingImages, setExistingImages] = useState([]);
   const [newImages, setNewImages] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
+  const [videoUrl, setVideoUrl] = useState(null);
   const [categories, setCategories] = useState([]);
   const [productStats, setProductStats] = useState(null);
   
@@ -79,6 +81,7 @@ const EditProduct = () => {
       });
       
       setExistingImages(product.product_images || []);
+      setVideoUrl(product.video_url || null);
     } catch (err) {
       toast.error(err.message);
       navigate('/farmer/products');
@@ -329,6 +332,16 @@ const EditProduct = () => {
                         </label>
                       )}
                     </div>
+                  </div>
+
+                  {/* Video Section */}
+                  <div>
+                    <VideoUploader
+                      productId={id}
+                      existingVideoUrl={videoUrl}
+                      onVideoUploaded={(url) => setVideoUrl(url)}
+                      onVideoDeleted={() => setVideoUrl(null)}
+                    />
                   </div>
 
                   {/* Product Info */}

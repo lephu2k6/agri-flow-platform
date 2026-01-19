@@ -4,13 +4,18 @@ import {
   Package, User, LogOut, Menu, X, 
   LayoutDashboard, PlusCircle, 
   Store, ClipboardList, ShoppingBag,
-  Leaf, Truck, Users, BarChart3
+  Leaf, Truck, Users, BarChart3, ShoppingCart, Heart,MessageCircle 
 } from "lucide-react"
 import { supabase } from "../../lib/supabase";
 import { useAuth } from '../../hooks/useAuth';
+import { useCart } from '../../contexts/CartContext';
+import { useChat } from '../../contexts/ChatContext';
+import NotificationBell from '../notifications/NotificationBell';
 
 const Header = () => {
   const { user, profile, signOut, signIn } = useAuth()
+  const { getCartItemCount } = useCart()
+  const { unreadCount } = useChat()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const navigate = useNavigate()
 
@@ -83,6 +88,21 @@ const Header = () => {
               <span>Chợ Nông Sản</span>
             </Link>
 
+            {user && (
+              <Link 
+                to="/chat" 
+                className="relative px-5 py-2.5 text-gray-700 hover:text-emerald-600 font-semibold flex items-center gap-2 transition-all rounded-xl hover:bg-emerald-50"
+              >
+                <MessageCircle size={18} className="text-emerald-500"/>
+                <span>Tin nhắn</span>
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+              </Link>
+            )}
+
             {/* FARMER MENU */}
             {profile?.role === "farmer" && (
               <div className="flex items-center space-x-1 ml-2">
@@ -100,6 +120,13 @@ const Header = () => {
                 >
                   <BarChart3 size={16} className="text-emerald-500"/>
                   Sản phẩm
+                </Link>
+                <Link 
+                  to="/farmer/inventory" 
+                  className="px-4 py-2.5 text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all flex items-center gap-2 text-sm font-semibold"
+                >
+                  <Package size={16} className="text-emerald-500"/>
+                  Kho hàng
                 </Link>
                 <Link 
                   to="/farmer/orders" 
@@ -135,6 +162,31 @@ const Header = () => {
 
           {/* DESKTOP USER ACTION */}
           <div className="hidden lg:flex items-center space-x-3">
+            {/* Cart, Wishlist & Notifications */}
+            <Link 
+              to="/cart"
+              className="relative p-2.5 text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all"
+            >
+              <ShoppingCart size={20} />
+              {getCartItemCount() > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-emerald-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                  {getCartItemCount() > 9 ? '9+' : getCartItemCount()}
+                </span>
+              )}
+            </Link>
+
+            {user && (
+              <>
+                <Link 
+                  to="/wishlist"
+                  className="p-2.5 text-gray-700 hover:text-pink-600 hover:bg-pink-50 rounded-xl transition-all"
+                >
+                  <Heart size={20} />
+                </Link>
+                <NotificationBell />
+              </>
+            )}
+
             {user ? (
               <div className="flex items-center gap-3">
                 {getRoleBadge()}
@@ -223,6 +275,25 @@ const Header = () => {
                   <div className="font-bold">Chợ Nông Sản</div>
                   <div className="text-xs text-gray-500">Giao dịch trực tiếp</div>
                 </div>
+              </Link>
+
+              <Link 
+                to="/cart" 
+                className="flex items-center gap-4 p-4 bg-white border border-emerald-50 rounded-2xl font-semibold text-gray-800 hover:bg-emerald-50 transition-all relative"
+                onClick={closeMenu}
+              >
+                <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center">
+                  <ShoppingCart size={20} className="text-emerald-500"/>
+                </div>
+                <div className="flex-1">
+                  <div className="font-bold">Giỏ hàng</div>
+                  <div className="text-xs text-gray-500">{getCartItemCount()} sản phẩm</div>
+                </div>
+                {getCartItemCount() > 0 && (
+                  <span className="w-6 h-6 bg-emerald-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                    {getCartItemCount() > 9 ? '9+' : getCartItemCount()}
+                  </span>
+                )}
               </Link>
 
               {/* FARMER MENU */}

@@ -6,6 +6,7 @@ import toast from 'react-hot-toast'
 import { farmerService } from '../../services/farmer.service'
 import { useAuth } from '../../hooks/useAuth'
 import { supabase } from '../../lib/supabase'
+import VideoUploader from '../../components/products/VideoUploader'
 
 const CreateProduct = () => {
   const { user } = useAuth()
@@ -14,6 +15,7 @@ const CreateProduct = () => {
   const [loading, setLoading] = useState(false)
   const [images, setImages] = useState([])
   const [imagePreviews, setImagePreviews] = useState([])
+  const [videoFile, setVideoFile] = useState(null)
   const [categories, setCategories] = useState([])
   const [loadingCategories, setLoadingCategories] = useState(true)
   const [activeStep, setActiveStep] = useState(1)
@@ -99,6 +101,16 @@ const CreateProduct = () => {
       }
       const res = await farmerService.createProduct(payload, images)
       if (res.success) {
+        // Upload video if exists
+        if (videoFile && res.product?.id) {
+          const { videoService } = await import('../../services/video.service')
+          const videoResult = await videoService.uploadProductVideo(res.product.id, videoFile)
+          if (!videoResult.success) {
+            console.warn('Video upload failed:', videoResult.error)
+            toast.error('Sản phẩm đã được tạo nhưng upload video thất bại')
+          }
+        }
+
         toast.success(
           <div className="flex items-center gap-2">
             <Check className="text-emerald-600" />
@@ -115,6 +127,10 @@ const CreateProduct = () => {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleVideoSelected = (file) => {
+    setVideoFile(file)
   }
 
   const selectedCatObj = categories.find(c => String(c.id) === String(formData.category_id))
@@ -341,6 +357,12 @@ const CreateProduct = () => {
                       placeholder="Mô tả chi tiết về sản phẩm của bạn..."
                     />
                   </div>
+
+                  {/* Video Upload */}
+                  <VideoUploader
+                    productId={null}
+                    onVideoUploaded={handleVideoSelected}
+                  />
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>

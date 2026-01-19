@@ -42,7 +42,7 @@ export const buyerService = {
           delivery_district: orderData.delivery_district,
           notes: orderData.notes,
           payment_method: orderData.payment_method,
-          status: 'pending'
+          status: 'pending' // Giá trị hợp lệ: pending, confirmed, shipped, shipping, completed, cancelled, processing
         }])
         .select()
 
@@ -74,7 +74,11 @@ export const buyerService = {
           products (
             title, 
             unit,
-            image_url
+            image_url,
+            product_images (
+              image_url,
+              is_primary
+            )
           )
         `)
         .eq('buyer_id', user.id)

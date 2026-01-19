@@ -2,6 +2,9 @@ import React from "react"
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
 import { Toaster } from "react-hot-toast"
 import { AuthProvider } from "./contexts/AuthContext"
+import { CartProvider } from "./contexts/CartContext"
+import { NotificationProvider } from "./contexts/NotificationContext"
+import { ChatProvider } from "./contexts/ChatContext"
 import ProtectedRoute from "./components/common/ProtectedRoute"
 import Header from "./components/common/Header"
 
@@ -11,6 +14,7 @@ import Login from "./pages/Login"
 import Register from "./pages/Register"
 import Profile from "./pages/Profile"
 import NotFound from "./pages/NotFound"
+import Cart from "./pages/Cart"
 
 // Farmer Pages
 import Dashboard from "./pages/farmer/Dashboard"
@@ -18,7 +22,8 @@ import FarmerProducts from "./pages/farmer/Products"
 import CreateProduct from "./pages/farmer/CreateProduct"
 import EditProduct from "./pages/farmer/EditProduct"
 import FarmerProductDetail from "./pages/farmer/ProductDetail"
-import FarmerOrders from "./pages/farmer/Orders" // Mở comment này
+import FarmerOrders from "./pages/farmer/Orders"
+import Inventory from "./pages/farmer/Inventory"
 
 // Buyer Pages (Thêm mới)
 import MyOrders from "./pages/buyer/MyOrders"
@@ -27,13 +32,18 @@ import BuyerOrderDetail from "./pages/buyer/OrderDetail"
 // Public Pages
 import PublicProducts from "./pages/products/Product"
 import PublicProductDetail from "./pages/products/ProductDetail"
+import Wishlist from "./pages/Wishlist"
+import Chat from "./pages/Chat"
 
 function App() {
   return (
     <Router>
       <AuthProvider>
-        <div className="min-h-screen flex flex-col bg-gray-50">
-          <Header />
+        <CartProvider>
+          <NotificationProvider>
+            <ChatProvider>
+              <div className="min-h-screen flex flex-col bg-gray-50">
+                <Header />
           
           <main className="flex-1">
             <Routes>
@@ -45,6 +55,24 @@ function App() {
               {/* Chợ nông sản công khai */}
               <Route path="/products" element={<PublicProducts />} />
               <Route path="/products/:id" element={<PublicProductDetail />} />
+              <Route path="/cart" element={<Cart />} />
+              <Route 
+                path="/wishlist" 
+                element={
+                  <ProtectedRoute>
+                    <Wishlist />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              <Route 
+                path="/chat" 
+                element={
+                  <ProtectedRoute>
+                    <Chat />
+                  </ProtectedRoute>
+                } 
+              />
               
               {/* ================= BUYER PROTECTED ROUTES ================= */}
               <Route
@@ -138,6 +166,15 @@ function App() {
                 }
               />
               
+              <Route
+                path="/farmer/inventory"
+                element={
+                  <ProtectedRoute allowedRoles={["farmer"]}>
+                    <Inventory />
+                  </ProtectedRoute>
+                }
+              />
+              
               {/* Redirects */}
               <Route path="/dashboard" element={<Navigate to="/farmer/dashboard" replace />} />
               <Route path="/sell" element={<Navigate to="/farmer/products/create" replace />} />
@@ -148,7 +185,10 @@ function App() {
           </main>
           
           <Toaster position="top-right" />
-        </div>
+              </div>
+            </ChatProvider>
+          </NotificationProvider>
+        </CartProvider>
       </AuthProvider>
     </Router>
   )

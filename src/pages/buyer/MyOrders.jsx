@@ -10,8 +10,12 @@ const MyOrders = () => {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const { data } = await buyerService.getMyOrders()
-        if (data) setOrders(data)
+        const result = await buyerService.getMyOrders()
+        if (result.data) {
+          setOrders(result.data)
+        } else if (result.error) {
+          console.error("Lỗi khi tải đơn hàng:", result.error)
+        }
       } catch (error) {
         console.error("Lỗi khi tải đơn hàng:", error)
       } finally {
@@ -64,7 +68,9 @@ const MyOrders = () => {
           orders.map((order) => {
             const status = statusConfig[order.status] || statusConfig.pending
             // Lấy ảnh đầu tiên của sản phẩm
-            const productImage = order.products?.product_images?.[0]?.image_url || 'https://via.placeholder.com/150'
+            const productImage = order.products?.product_images?.[0]?.image_url || 
+                                order.products?.image_url || 
+                                'https://via.placeholder.com/150'
 
             return (
               <Link 

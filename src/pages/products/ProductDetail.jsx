@@ -2,25 +2,32 @@ import { useState, useEffect } from 'react'
 import React from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import {
-  ShoppingCart, MapPin, Package, User, MessageCircle, Truck, Shield, Clock, Leaf, ChevronLeft, Star, CheckCircle
+  ShoppingCart, MapPin, Package, User, MessageCircle, Truck, Shield, Clock, Leaf, ChevronLeft, Star, CheckCircle, Heart
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 import { useAuth } from '../../hooks/useAuth'
+import { useCart } from '../../contexts/CartContext'
 import { supabase } from '../../lib/supabase'
+import { wishlistService } from '../../services/wishlist.service'
 import ProductImageGallery from '../../components/products/ProductImageGallery'
+import ProductVideo from '../../components/products/ProductVideo'
 import OrderForm from '../../components/orders/OrderForm'
+import ChatButton from '../../components/chat/ChatButton'
 
 const PublicProductDetail = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const { user } = useAuth()
+  const { addToCart } = useCart()
 
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
   const [showOrderForm, setShowOrderForm] = useState(false)
   const [selectedQuantity, setSelectedQuantity] = useState(1)
   const [farmerStats, setFarmerStats] = useState(null)
+  const [isInWishlist, setIsInWishlist] = useState(false)
+  const [wishlistLoading, setWishlistLoading] = useState(false)
 
   useEffect(() => {
     if (id) {
@@ -33,6 +40,49 @@ const PublicProductDetail = () => {
       fetchFarmerStats()
     }
   }, [product?.profiles?.id])
+
+  useEffect(() => {
+    if (product?.id && user?.id) {
+      checkWishlist()
+    }
+  }, [product?.id, user?.id])
+
+  const checkWishlist = async () => {
+    if (!user || !product?.id) return
+    const result = await wishlistService.isInWishlist(product.id, user.id)
+    if (result.success) {
+      setIsInWishlist(result.isInWishlist)
+    }
+  }
+
+  const handleWishlistToggle = async () => {
+    if (!user) {
+      navigate('/login')
+      return
+    }
+
+    setWishlistLoading(true)
+    try {
+      if (isInWishlist) {
+        const result = await wishlistService.removeFromWishlist(product.id, user.id)
+        if (result.success) {
+          setIsInWishlist(false)
+          toast.success('Đã xóa khỏi danh sách yêu thích')
+        }
+      } else {
+        const result = await wishlistService.addToWishlist(product.id, user.id)
+        if (result.success) {
+          setIsInWishlist(true)
+          toast.success('Đã thêm vào danh sách yêu thích')
+        }
+      }
+    } catch (error) {
+      console.error('Wishlist toggle error:', error)
+      toast.error('Có lỗi xảy ra')
+    } finally {
+      setWishlistLoading(false)
+    }
+  }
 
   const fetchProductDetails = async () => {
     try {
@@ -187,6 +237,11 @@ const PublicProductDetail = () => {
               <ProductImageGallery images={sortedImages} />
             </div>
 
+            {/* Product Video */}
+            {product.video_url && (
+              <ProductVideo videoUrl={product.video_url} title="Video giới thiệu sản phẩm" />
+            )}
+
             {/* Product Details */}
             <div className="bg-white rounded-2xl shadow-lg border border-emerald-100 p-6">
               <h2 className="text-2xl font-bold text-gray-900 mb-6 pb-4 border-b border-emerald-100">
@@ -338,13 +393,44 @@ const PublicProductDetail = () => {
                       </div>
                     </button>
                     
-                    <button
-                      onClick={() => navigate(`/chat/${product.profiles?.id}`)}
-                      className="w-full py-3 border-2 border-emerald-500 text-emerald-600 rounded-xl font-bold hover:bg-emerald-50 transition-all flex items-center justify-center gap-2"
-                    >
-                      <MessageCircle size={18} />
-                      Chat với nông dân
-                    </button>
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        onClick={() => {
+                          if (!user) {
+                            navigate('/login')
+                            return
+                          }
+                          addToCart(product, selectedQuantity)
+                        }}
+                        className="py-3 bg-white border-2 border-emerald-500 text-emerald-600 rounded-xl font-bold hover:bg-emerald-50 transition-all flex items-center justify-center gap-2"
+                      >
+                        <ShoppingCart size={18} />
+                        Giỏ hàng
+                      </button>
+                      
+                      <button
+                        onClick={handleWishlistToggle}
+                        disabled={wishlistLoading}
+                        className={`py-3 border-2 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${
+                          isInWishlist
+                            ? 'bg-pink-50 border-pink-500 text-pink-600 hover:bg-pink-100'
+                            : 'bg-white border-emerald-500 text-emerald-600 hover:bg-emerald-50'
+                        } disabled:opacity-50`}
+                      >
+                        <Heart size={18} className={isInWishlist ? 'fill-pink-500' : ''} />
+                        {isInWishlist ? 'Đã thích' : 'Yêu thích'}
+                      </button>
+                    </div>
+                    
+                    <div className="w-full">
+                      <ChatButton
+                        farmerId={product.farmer_id}
+                        buyerId={user?.id}
+                        productId={product.id}
+                        productTitle={product.title}
+                        className="w-full py-3"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -417,12 +503,13 @@ const PublicProductDetail = () => {
               <p className="text-emerald-100">Đội ngũ AgriFlow luôn sẵn sàng hỗ trợ bạn 24/7</p>
             </div>
             <div className="flex gap-3">
-              <button
-                onClick={() => navigate(`/chat/${product.profiles?.id}`)}
+              <ChatButton
+                farmerId={product.farmer_id}
+                buyerId={user?.id}
+                productId={product.id}
+                productTitle={product.title}
                 className="px-6 py-3 bg-white text-emerald-600 rounded-xl font-bold hover:bg-emerald-50 transition-all shadow-lg"
-              >
-                Chat ngay
-              </button>
+              />
               <button
                 onClick={() => navigate('/support')}
                 className="px-6 py-3 border-2 border-white text-white rounded-xl font-bold hover:bg-white/10 transition-all"
