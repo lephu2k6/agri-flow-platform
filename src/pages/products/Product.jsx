@@ -444,45 +444,7 @@ const Products = () => {
             ) : (
               <div className="space-y-4">
                 {products.map(p => (
-                  <div key={p.id} className="bg-white rounded-2xl shadow-lg border border-emerald-100 overflow-hidden">
-                    {/* List view component - bạn có thể tạo riêng hoặc dùng ProductCard với layout khác */}
-                    <div className="flex">
-                      <div className="w-48 h-48 bg-gradient-to-br from-emerald-100 to-emerald-50 flex items-center justify-center">
-                        {p.images[0] ? (
-                          <img src={p.images[0].url} alt={p.title} className="w-full h-full object-cover" />
-                        ) : (
-                          <PackageSearch size={48} className="text-emerald-400" />
-                        )}
-                      </div>
-                      <div className="flex-1 p-6">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h3 className="text-xl font-bold text-gray-800 mb-2">{p.title}</h3>
-                            <p className="text-gray-600 mb-4 line-clamp-2">{p.description}</p>
-                            <div className="flex items-center gap-4 text-sm text-gray-500">
-                              <span className="flex items-center gap-1">
-                                <MapPin size={14} />
-                                {p.province}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <Leaf size={14} />
-                                {p.profiles?.full_name}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-2xl font-bold text-emerald-600">
-                              {p.price_per_unit?.toLocaleString()}₫
-                            </div>
-                            <div className="text-sm text-gray-500">/{p.unit}</div>
-                            <button className="mt-4 px-6 py-2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-lg font-bold hover:from-emerald-600 hover:to-emerald-700 transition-all">
-                              Xem chi tiết
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                  <ProductCard key={p.id} product={p} viewMode="list" />
                 ))}
               </div>
             )}
