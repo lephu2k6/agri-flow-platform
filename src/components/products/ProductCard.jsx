@@ -171,7 +171,7 @@ const ProductCard = ({ product, showFarmerInfo = true, viewMode = 'grid' }) => {
               </div>
               <div className="flex items-center gap-1 text-xs bg-sky-50 text-sky-600 px-2 py-1 rounded-full">
                 <Truck size={12} />
-                <span>Miễn phí vận chuyển</span>
+                <span>Hệ thống gợi ý</span>
               </div>
             </div>
 
@@ -303,7 +303,7 @@ const ProductCard = ({ product, showFarmerInfo = true, viewMode = 'grid' }) => {
                 </div>
                 <div className="flex items-center justify-end gap-1 text-sm text-sky-600 mb-4">
                   <Truck size={14} />
-                  <span>Miễn phí vận chuyển</span>
+                  <span>Hệ thống gợi ý</span>
                 </div>
               </div>
             </div>
