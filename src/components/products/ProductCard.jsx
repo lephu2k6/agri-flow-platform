@@ -62,7 +62,7 @@ const ProductCard = ({ product, showFarmerInfo = true, viewMode = 'grid' }) => {
   if (viewMode === 'grid') {
     return (
       <Link to={`/products/${product.id}`}>
-        <div 
+        <div
           className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden border border-emerald-100 hover:border-emerald-300 relative"
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
@@ -82,17 +82,16 @@ const ProductCard = ({ product, showFarmerInfo = true, viewMode = 'grid' }) => {
             {!imageLoaded && (
               <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 to-sky-50 animate-pulse" />
             )}
-            
+
             {/* Product Image */}
             <img
               src={getImageUrl()}
               alt={product.title}
-              className={`w-full h-full object-cover transition-all duration-700 ${
-                imageLoaded ? 'opacity-100' : 'opacity-0'
-              } ${isHovered ? 'scale-110' : 'scale-100'}`}
+              className={`w-full h-full object-cover transition-all duration-700 ${imageLoaded ? 'opacity-100' : 'opacity-0'
+                } ${isHovered ? 'scale-110' : 'scale-100'}`}
               onLoad={() => setImageLoaded(true)}
             />
-            
+
             {/* Status Badge */}
             <div className="absolute top-3 right-3 z-10">
               {product.status === 'available' ? (
@@ -105,11 +104,10 @@ const ProductCard = ({ product, showFarmerInfo = true, viewMode = 'grid' }) => {
                 </span>
               )}
             </div>
-            
+
             {/* Quick Actions Overlay */}
-            <div className={`absolute inset-0 bg-gradient-to-t from-black/30 via-black/0 to-transparent flex items-end justify-center transition-opacity duration-500 ${
-              isHovered ? 'opacity-100' : 'opacity-0'
-            }`}>
+            <div className={`absolute inset-0 bg-gradient-to-t from-black/30 via-black/0 to-transparent flex items-end justify-center transition-opacity duration-500 ${isHovered ? 'opacity-100' : 'opacity-0'
+              }`}>
               <div className="w-full p-4 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
                 <button className="w-full py-3 bg-white/90 backdrop-blur-sm rounded-xl font-bold text-emerald-700 flex items-center justify-center gap-2 shadow-lg hover:bg-white transition-all hover:scale-105">
                   <Eye size={18} />
@@ -193,25 +191,22 @@ const ProductCard = ({ product, showFarmerInfo = true, viewMode = 'grid' }) => {
                       {getVerificationBadge()}
                     </div>
                   </div>
-                  
-                  {getFarmerRating() > 0 && (
-                    <div className="flex items-center gap-1">
-                      <Star size={14} className="text-amber-500 fill-current" />
-                      <span className="text-sm font-bold text-gray-800">
-                        {getFarmerRating().toFixed(1)}
-                      </span>
-                      <span className="text-xs text-gray-500">({product.profiles.review_count || 0})</span>
-                    </div>
-                  )}
+
+                  <div className="flex items-center gap-1 bg-amber-50 px-2 py-1 rounded-lg">
+                    <Star size={14} className={`${product.average_rating > 0 ? 'text-amber-500 fill-current' : 'text-gray-300'}`} />
+                    <span className="text-sm font-bold text-gray-800">
+                      {product.average_rating > 0 ? Number(product.average_rating).toFixed(1) : '5.0'}
+                    </span>
+                    <span className="text-[10px] text-gray-400">({product.total_reviews || 0})</span>
+                  </div>
                 </div>
               </div>
             )}
           </div>
 
           {/* Hover Effect Border */}
-          <div className={`absolute inset-0 rounded-2xl border-2 border-emerald-300 pointer-events-none transition-opacity duration-500 ${
-            isHovered ? 'opacity-100' : 'opacity-0'
-          }`}></div>
+          <div className={`absolute inset-0 rounded-2xl border-2 border-emerald-300 pointer-events-none transition-opacity duration-500 ${isHovered ? 'opacity-100' : 'opacity-0'
+            }`}></div>
         </div>
       </Link>
     )
@@ -220,7 +215,7 @@ const ProductCard = ({ product, showFarmerInfo = true, viewMode = 'grid' }) => {
   // List View
   return (
     <Link to={`/products/${product.id}`}>
-      <div 
+      <div
         className="group bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-emerald-100 hover:border-emerald-300 p-5"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
@@ -234,7 +229,7 @@ const ProductCard = ({ product, showFarmerInfo = true, viewMode = 'grid' }) => {
                 alt={product.title}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               />
-              
+
               {/* Status Badge */}
               {product.status === 'available' && (
                 <div className="absolute top-3 right-3">
@@ -273,7 +268,7 @@ const ProductCard = ({ product, showFarmerInfo = true, viewMode = 'grid' }) => {
                   </div>
                   {getQualityBadge()}
                 </div>
-                
+
                 <div className="flex items-center gap-4 mb-3">
                   <div className="flex items-center gap-2 text-gray-600">
                     <MapPin size={16} className="text-emerald-500" />
@@ -286,7 +281,7 @@ const ProductCard = ({ product, showFarmerInfo = true, viewMode = 'grid' }) => {
                     </div>
                   )}
                 </div>
-                
+
                 <p className="text-gray-700 line-clamp-2 mb-4">
                   {product.description}
                 </p>
@@ -323,15 +318,13 @@ const ProductCard = ({ product, showFarmerInfo = true, viewMode = 'grid' }) => {
                   </div>
                   <div className="flex items-center gap-2 mt-1">
                     {getVerificationBadge()}
-                    {getFarmerRating() > 0 && (
-                      <div className="flex items-center gap-1">
-                        <Star size={12} className="text-amber-500 fill-current" />
-                        <span className="text-xs font-bold text-gray-800">
-                          {getFarmerRating().toFixed(1)}
-                        </span>
-                        <span className="text-xs text-gray-500">({product.profiles.review_count || 0})</span>
-                      </div>
-                    )}
+                    <div className="flex items-center gap-1 bg-amber-50 px-2 py-1 rounded-lg">
+                      <Star size={12} className={`${product.average_rating > 0 ? 'text-amber-500 fill-current' : 'text-gray-300'}`} />
+                      <span className="text-xs font-bold text-gray-800">
+                        {product.average_rating > 0 ? Number(product.average_rating).toFixed(1) : '5.0'}
+                      </span>
+                      <span className="text-[10px] text-gray-500">({product.total_reviews || 0})</span>
+                    </div>
                   </div>
                 </div>
               </div>

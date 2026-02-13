@@ -10,53 +10,109 @@ export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([])
   const [loading, setLoading] = useState(false)
 
-  // Load cart from localStorage on mount
+  // Load cart from Supabase or localStorage on mount/auth change
   useEffect(() => {
-    const savedCart = localStorage.getItem('cart')
-    if (savedCart) {
-      try {
-        setCartItems(JSON.parse(savedCart))
-      } catch (e) {
-        console.error('Error loading cart:', e)
+    const fetchCart = async () => {
+      if (user) {
+        setLoading(true)
+        try {
+          const { data, error } = await supabase
+            .from('cart_items')
+            .select(`
+              quantity,
+              product_id,
+              products (*)
+            `)
+            .eq('user_id', user.id)
+
+          if (error) throw error
+
+          if (data) {
+            const formattedItems = data.map(item => ({
+              product_id: item.product_id,
+              farmer_id: item.products.farmer_id,
+              title: item.products.title,
+              price_per_unit: item.products.price_per_unit,
+              unit: item.products.unit,
+              quantity: item.quantity,
+              image_url: item.products.product_images?.[0]?.image_url || item.products.image_url,
+              min_order_quantity: item.products.min_order_quantity || 1,
+              available_quantity: item.products.quantity,
+              province: item.products.province
+            }))
+            setCartItems(formattedItems)
+          }
+        } catch (error) {
+          console.error('Error fetching cart:', error)
+          // Fallback to localStorage if error
+          loadFromLocal()
+        } finally {
+          setLoading(false)
+        }
+      } else {
+        loadFromLocal()
       }
     }
-  }, [])
 
-  // Save cart to localStorage whenever it changes
-  useEffect(() => {
-    if (cartItems.length > 0) {
-      localStorage.setItem('cart', JSON.stringify(cartItems))
-    } else {
-      localStorage.removeItem('cart')
+    const loadFromLocal = () => {
+      const savedCart = localStorage.getItem('cart')
+      if (savedCart) {
+        try {
+          setCartItems(JSON.parse(savedCart))
+        } catch (e) {
+          console.error('Error loading cart:', e)
+        }
+      } else {
+        setCartItems([])
+      }
     }
-  }, [cartItems])
+
+    fetchCart()
+  }, [user])
+
+  // Save cart to localStorage (for guests)
+  useEffect(() => {
+    if (!user) {
+      if (cartItems.length > 0) {
+        localStorage.setItem('cart', JSON.stringify(cartItems))
+      } else {
+        localStorage.removeItem('cart')
+      }
+    }
+  }, [cartItems, user])
 
   const addToCart = async (product, quantity = 1) => {
     try {
-      // Check if product already in cart
-      const existingItemIndex = cartItems.findIndex(item => item.product_id === product.id)
-      
-      if (existingItemIndex >= 0) {
-        // Update quantity
-        const updatedItems = [...cartItems]
-        const newQuantity = updatedItems[existingItemIndex].quantity + quantity
-        
-        // Check stock
-        if (newQuantity > product.quantity) {
-          toast.error(`Kho chỉ còn ${product.quantity} ${product.unit}`)
-          return
-        }
-        
-        updatedItems[existingItemIndex].quantity = newQuantity
-        setCartItems(updatedItems)
+      const existingItem = cartItems.find(item => item.product_id === product.id)
+      const newQuantity = existingItem ? existingItem.quantity + quantity : quantity
+
+      // Check stock
+      if (newQuantity > product.quantity) {
+        toast.error(`Kho chỉ còn ${product.quantity} ${product.unit}`)
+        return
+      }
+
+      if (user) {
+        const { error } = await supabase
+          .from('cart_items')
+          .upsert({
+            user_id: user.id,
+            product_id: product.id,
+            quantity: newQuantity,
+            updated_at: new Date()
+          }, { onConflict: 'user_id, product_id' })
+
+        if (error) throw error
+      }
+
+      if (existingItem) {
+        setCartItems(cartItems.map(item =>
+          item.product_id === product.id
+            ? { ...item, quantity: newQuantity }
+            : item
+        ))
         toast.success('Đã cập nhật giỏ hàng')
       } else {
-        // Add new item
-        if (quantity > product.quantity) {
-          toast.error(`Kho chỉ còn ${product.quantity} ${product.unit}`)
-          return
-        }
-
         const cartItem = {
           product_id: product.id,
           farmer_id: product.farmer_id,
@@ -69,22 +125,36 @@ export const CartProvider = ({ children }) => {
           available_quantity: product.quantity,
           province: product.province
         }
-        
         setCartItems([...cartItems, cartItem])
         toast.success('Đã thêm vào giỏ hàng')
       }
     } catch (error) {
       console.error('Error adding to cart:', error)
-      toast.error('Không thể thêm vào giỏ hàng')
+      toast.error('Không thể lưu giỏ hàng vào database')
     }
   }
 
-  const removeFromCart = (productId) => {
-    setCartItems(cartItems.filter(item => item.product_id !== productId))
-    toast.success('Đã xóa khỏi giỏ hàng')
+  const removeFromCart = async (productId) => {
+    try {
+      if (user) {
+        const { error } = await supabase
+          .from('cart_items')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('product_id', productId)
+
+        if (error) throw error
+      }
+
+      setCartItems(cartItems.filter(item => item.product_id !== productId))
+      toast.success('Đã xóa khỏi giỏ hàng')
+    } catch (error) {
+      console.error('Error removing from cart:', error)
+      toast.error('Lỗi khi xóa sản phẩm')
+    }
   }
 
-  const updateQuantity = (productId, newQuantity) => {
+  const updateQuantity = async (productId, newQuantity) => {
     const item = cartItems.find(item => item.product_id === productId)
     if (!item) return
 
@@ -98,16 +168,44 @@ export const CartProvider = ({ children }) => {
       return
     }
 
-    setCartItems(cartItems.map(item => 
-      item.product_id === productId 
-        ? { ...item, quantity: newQuantity }
-        : item
-    ))
+    try {
+      if (user) {
+        const { error } = await supabase
+          .from('cart_items')
+          .update({ quantity: newQuantity, updated_at: new Date() })
+          .eq('user_id', user.id)
+          .eq('product_id', productId)
+
+        if (error) throw error
+      }
+
+      setCartItems(cartItems.map(item =>
+        item.product_id === productId
+          ? { ...item, quantity: newQuantity }
+          : item
+      ))
+    } catch (error) {
+      console.error('Error updating quantity:', error)
+      toast.error('Lỗi cập nhật số lượng')
+    }
   }
 
-  const clearCart = () => {
-    setCartItems([])
-    toast.success('Đã xóa toàn bộ giỏ hàng')
+  const clearCart = async () => {
+    try {
+      if (user) {
+        const { error } = await supabase
+          .from('cart_items')
+          .delete()
+          .eq('user_id', user.id)
+
+        if (error) throw error
+      }
+      setCartItems([])
+      toast.success('Đã xóa toàn bộ giỏ hàng')
+    } catch (error) {
+      console.error('Error clearing cart:', error)
+      toast.error('Lỗi khi dọn giỏ hàng')
+    }
   }
 
   const getCartTotal = () => {

@@ -12,8 +12,8 @@ const marqueeItems = [,
 export default function AgriFlowSimple() {
   return (
     <div className="min-h-screen bg-linear-to-r from-emerald-50/30 to-white text-gray-800 font-sans selection:bg-emerald-200">
-      
-      
+
+
       {/* Hero Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-8 pt-12 pb-32 grid lg:grid-cols-2 gap-16 items-center">
         <div className="order-2 lg:order-1">
@@ -21,25 +21,25 @@ export default function AgriFlowSimple() {
             <Users size={14} />
             Dành cho nông dân miền Trung - Nam
           </div>
-          
+
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight tracking-tight mb-8">
-            Kết nối trực tiếp 
+            Kết nối trực tiếp
             <span className="block text-emerald-600 mt-3">Nông sản Việt</span>
           </h1>
-          
+
           <p className="text-lg text-gray-600 max-w-xl mb-10 leading-relaxed">
-            Nền tảng số giúp nông dân chủ động tiêu thụ, tối ưu vận tải và 
+            Nền tảng số giúp nông dân chủ động tiêu thụ, tối ưu vận tải và
             <span className="font-semibold text-emerald-700"> giảm 30% chi phí trung gian</span>.
           </p>
-          
+
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
             <Link to="/register">
-             <button className="bg-linear-to-r from-emerald-500 to-emerald-600 text-white px-8 py-4 rounded-xl font-bold hover:from-emerald-600 hover:to-emerald-700 transition-all flex items-center gap-3 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+              <button className="bg-linear-to-r from-emerald-500 to-emerald-600 text-white px-8 py-4 rounded-xl font-bold hover:from-emerald-600 hover:to-emerald-700 transition-all flex items-center gap-3 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
                 Tham gia ngay
                 <ArrowRight size={18} />
-               </button>
-             </Link>
-            
+              </button>
+            </Link>
+
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-full bg-sky-100 flex items-center justify-center">
                 <Clock className="text-sky-600" size={18} />
@@ -55,16 +55,16 @@ export default function AgriFlowSimple() {
         {/* Hero Image */}
         <div className="order-1 lg:order-2 relative">
           <div className="aspect-4/5 bg-linear-to-r from-emerald-100/50 to-sky-100/50 rounded-3xl overflow-hidden shadow-2xl border-4 border-white">
-            <img 
-              src="https://images.unsplash.com/photo-1605000797499-95a51c5269ae?q=80&w=2071&auto=format&fit=crop" 
+            <img
+              src="https://images.unsplash.com/photo-1605000797499-95a51c5269ae?q=80&w=2071&auto=format&fit=crop"
               className="w-full h-full object-cover mix-blend-multiply opacity-90"
-              alt="Nông dân và nông sản" 
+              alt="Nông dân và nông sản"
             />
           </div>
         </div>
       </section>
 
-         {/* Marquee */}
+      {/* Marquee */}
       <div className="bg-emerald-600 py-4 overflow-hidden">
         <div className="flex animate-marquee whitespace-nowrap">
           {[...marqueeItems, ...marqueeItems].map((item, index) => (
@@ -87,7 +87,7 @@ export default function AgriFlowSimple() {
               Giải pháp toàn diện cho chuỗi cung ứng nông sản
             </p>
           </div>
-          
+
           <div className="grid md:grid-cols-3 gap-8">
             <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-shadow border border-emerald-50 group hover:border-emerald-100">
               <div className="w-16 h-16 rounded-xl bg-linear-to-r from-emerald-100 to-emerald-50 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
@@ -101,7 +101,7 @@ export default function AgriFlowSimple() {
                 <span className="text-sm font-semibold text-emerald-600">Dự báo AI tích hợp</span>
               </div>
             </div>
-            
+
             <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-shadow border border-sky-50 group hover:border-sky-100">
               <div className="w-16 h-16 rounded-xl bg-linear-to-r from-sky-100 to-sky-50 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                 <Globe size={28} className="text-sky-600" />
@@ -114,7 +114,7 @@ export default function AgriFlowSimple() {
                 <span className="text-sm font-semibold text-sky-600">Tự động ghép lộ trình</span>
               </div>
             </div>
-            
+
             <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-shadow border border-emerald-50 group hover:border-emerald-100">
               <div className="w-16 h-16 rounded-xl bg-linear-to-r from-amber-100 to-amber-50 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                 <ShieldCheck size={28} className="text-amber-600" />
@@ -149,7 +149,7 @@ export default function AgriFlowSimple() {
                 Nền tảng số kết nối giao dịch & logistics nông sản Việt
               </p>
             </div>
-            
+
             <div>
               <h4 className="font-bold text-lg mb-6">Đối tượng</h4>
               <ul className="space-y-3 text-emerald-100">
@@ -159,7 +159,7 @@ export default function AgriFlowSimple() {
                 <li className="hover:text-white transition-colors">Nhà phân phối</li>
               </ul>
             </div>
-            
+
             <div>
               <h4 className="font-bold text-lg mb-6">Khu vực</h4>
               <ul className="space-y-3 text-emerald-100">
@@ -169,7 +169,7 @@ export default function AgriFlowSimple() {
                 <li className="hover:text-white transition-colors">Đồng bằng Sông Cửu Long</li>
               </ul>
             </div>
-            
+
             <div>
               <h4 className="font-bold text-lg mb-6">Kết nối</h4>
               <div className="flex gap-4 mb-6">
@@ -188,10 +188,10 @@ export default function AgriFlowSimple() {
               </p>
             </div>
           </div>
-          
+
           <div className="pt-8 border-t border-emerald-700 flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-emerald-200 text-sm text-center md:text-left">
-              © 2024 AGRI-FLOW. Dự án số hóa nông sản miền Trung - Nam.
+              © 2026 AGRI-FLOW. Dự án số hóa nông sản miền Trung - Nam.
             </p>
             <div className="flex gap-6 text-sm">
               <a href="#" className="text-emerald-200 hover:text-white transition-colors">Chính sách</a>

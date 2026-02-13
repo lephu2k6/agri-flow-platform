@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
-import { 
-  CheckCircle, Truck, XCircle, Phone, MapPin, Package, 
+import {
+  CheckCircle, Truck, XCircle, Phone, MapPin, Package,
   User, Clock, DollarSign, ChevronRight, RefreshCw, Eye,
   TrendingUp, ShoppingBag, Calendar, AlertCircle
 } from 'lucide-react'
@@ -18,6 +18,7 @@ const FarmerOrders = () => {
     revenue: 0
   })
   const [activeFilter, setActiveFilter] = useState('all')
+  const [selectedOrder, setSelectedOrder] = useState(null)
 
   const fetchOrders = async () => {
     setLoading(true)
@@ -28,9 +29,9 @@ const FarmerOrders = () => {
         .select('*, products(title, unit, price_per_unit), profiles:buyer_id(full_name, phone, avatar_url)')
         .eq('farmer_id', user?.id)
         .order('created_at', { ascending: false })
-      
+
       if (error) throw error
-      
+
       setOrders(data || [])
       calculateStats(data || [])
     } catch (error) {
@@ -54,22 +55,22 @@ const FarmerOrders = () => {
     setStats(statsData)
   }
 
-  useEffect(() => { 
-    fetchOrders() 
+  useEffect(() => {
+    fetchOrders()
   }, [])
 
   const updateStatus = async (id, status) => {
     try {
       const { error } = await supabase
         .from('orders')
-        .update({ 
+        .update({
           status,
           updated_at: new Date().toISOString()
         })
         .eq('id', id)
 
       if (error) throw error
-      
+
       toast.success(
         <div className="flex items-center gap-2">
           <CheckCircle className="text-emerald-600" size={20} />
@@ -84,41 +85,41 @@ const FarmerOrders = () => {
 
   const getStatusBadge = (status) => {
     const statusConfig = {
-      pending: { 
-        label: 'Chờ xác nhận', 
-        color: 'bg-amber-100 text-amber-700', 
+      pending: {
+        label: 'Chờ xác nhận',
+        color: 'bg-amber-100 text-amber-700',
         border: 'border-amber-200',
-        icon: Clock 
+        icon: Clock
       },
-      confirmed: { 
-        label: 'Đã xác nhận', 
-        color: 'bg-blue-100 text-blue-700', 
+      confirmed: {
+        label: 'Đã xác nhận',
+        color: 'bg-blue-100 text-blue-700',
         border: 'border-blue-200',
-        icon: CheckCircle 
+        icon: CheckCircle
       },
-      shipped: { 
-        label: 'Đang giao hàng', 
-        color: 'bg-purple-100 text-purple-700', 
+      shipped: {
+        label: 'Đang giao hàng',
+        color: 'bg-purple-100 text-purple-700',
         border: 'border-purple-200',
-        icon: Truck 
+        icon: Truck
       },
-      completed: { 
-        label: 'Hoàn thành', 
-        color: 'bg-emerald-100 text-emerald-700', 
+      completed: {
+        label: 'Hoàn thành',
+        color: 'bg-emerald-100 text-emerald-700',
         border: 'border-emerald-200',
-        icon: CheckCircle 
+        icon: CheckCircle
       },
-      cancelled: { 
-        label: 'Đã hủy', 
-        color: 'bg-red-100 text-red-700', 
+      cancelled: {
+        label: 'Đã hủy',
+        color: 'bg-red-100 text-red-700',
         border: 'border-red-200',
-        icon: XCircle 
+        icon: XCircle
       }
     }
-    
+
     const config = statusConfig[status] || statusConfig.pending
     const Icon = config.icon
-    
+
     return (
       <span className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-semibold border ${config.color} ${config.border}`}>
         <Icon size={14} />
@@ -130,42 +131,42 @@ const FarmerOrders = () => {
   const getStatusActions = (status, id) => {
     const actions = {
       pending: [
-        { 
-          label: 'Xác nhận đơn', 
+        {
+          label: 'Xác nhận đơn',
           onClick: () => updateStatus(id, 'confirmed'),
           color: 'bg-emerald-500 hover:bg-emerald-600',
           icon: CheckCircle
         },
-        { 
-          label: 'Từ chối', 
+        {
+          label: 'Từ chối',
           onClick: () => updateStatus(id, 'cancelled'),
           color: 'bg-red-500 hover:bg-red-600',
           icon: XCircle
         }
       ],
       confirmed: [
-        { 
-          label: 'Bắt đầu giao hàng', 
+        {
+          label: 'Bắt đầu giao hàng',
           onClick: () => updateStatus(id, 'shipped'),
           color: 'bg-blue-500 hover:bg-blue-600',
           icon: Truck
         }
       ],
       shipped: [
-        { 
-          label: 'Đánh dấu hoàn thành', 
+        {
+          label: 'Đánh dấu hoàn thành',
           onClick: () => updateStatus(id, 'completed'),
           color: 'bg-emerald-500 hover:bg-emerald-600',
           icon: CheckCircle
         }
       ]
     }
-    
+
     return actions[status] || []
   }
 
-  const filteredOrders = activeFilter === 'all' 
-    ? orders 
+  const filteredOrders = activeFilter === 'all'
+    ? orders
     : orders.filter(order => order.status === activeFilter)
 
   const formatCurrency = (amount) => {
@@ -233,17 +234,16 @@ const FarmerOrders = () => {
                   <button
                     key={filter}
                     onClick={() => setActiveFilter(filter)}
-                    className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                      activeFilter === filter
-                        ? 'bg-emerald-500 text-white shadow-md'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
+                    className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${activeFilter === filter
+                      ? 'bg-emerald-500 text-white shadow-md'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
                   >
                     {filter === 'all' ? 'Tất cả' :
-                     filter === 'pending' ? 'Chờ xác nhận' :
-                     filter === 'confirmed' ? 'Đã xác nhận' :
-                     filter === 'shipped' ? 'Đang giao' :
-                     filter === 'completed' ? 'Hoàn thành' : 'Đã hủy'}
+                      filter === 'pending' ? 'Chờ xác nhận' :
+                        filter === 'confirmed' ? 'Đã xác nhận' :
+                          filter === 'shipped' ? 'Đang giao' :
+                            filter === 'completed' ? 'Hoàn thành' : 'Đã hủy'}
                   </button>
                 ))}
               </div>
@@ -276,8 +276,8 @@ const FarmerOrders = () => {
             </div>
             <h3 className="text-xl font-bold text-gray-800 mb-2">Không có đơn hàng nào</h3>
             <p className="text-gray-600 mb-6">
-              {activeFilter === 'all' 
-                ? 'Bạn chưa có đơn hàng nào. Hãy tiếp tục bán sản phẩm!' 
+              {activeFilter === 'all'
+                ? 'Bạn chưa có đơn hàng nào. Hãy tiếp tục bán sản phẩm!'
                 : `Không có đơn hàng nào ở trạng thái "${activeFilter}"`}
             </p>
           </div>
@@ -285,7 +285,7 @@ const FarmerOrders = () => {
           <div className="space-y-6">
             {filteredOrders.map(order => {
               const actions = getStatusActions(order.status, order.id)
-              
+
               return (
                 <div key={order.id} className="bg-white rounded-2xl shadow-lg border border-emerald-100 overflow-hidden hover:shadow-xl transition-all">
                   <div className="p-6">
@@ -297,7 +297,7 @@ const FarmerOrders = () => {
                             <div className="flex items-center gap-3 mb-2">
                               {getStatusBadge(order.status)}
                               <span className="text-sm text-gray-500 font-mono">
-                                #{order.id.slice(0,8).toUpperCase()}
+                                #{order.id.slice(0, 8).toUpperCase()}
                               </span>
                             </div>
                             <h3 className="text-xl font-bold text-gray-900 mb-2">{order.products?.title}</h3>
@@ -364,7 +364,10 @@ const FarmerOrders = () => {
                           </div>
                         )}
 
-                        <button className="w-full mt-3 py-2.5 border border-emerald-500 text-emerald-600 rounded-xl font-semibold hover:bg-emerald-50 transition-colors flex items-center justify-center gap-2">
+                        <button
+                          onClick={() => setSelectedOrder(order)}
+                          className="w-full mt-3 py-2.5 border border-emerald-500 text-emerald-600 rounded-xl font-semibold hover:bg-emerald-50 transition-colors flex items-center justify-center gap-2"
+                        >
                           <Eye size={16} />
                           Xem chi tiết
                         </button>
@@ -391,9 +394,9 @@ const FarmerOrders = () => {
                         <div>
                           <div className="text-gray-600">Thời gian tạo</div>
                           <div className="font-semibold text-gray-800">
-                            {new Date(order.created_at).toLocaleTimeString('vi-VN', { 
-                              hour: '2-digit', 
-                              minute: '2-digit' 
+                            {new Date(order.created_at).toLocaleTimeString('vi-VN', {
+                              hour: '2-digit',
+                              minute: '2-digit'
                             })}
                           </div>
                         </div>
@@ -425,7 +428,7 @@ const FarmerOrders = () => {
                   <span className="font-semibold">Tổng kết</span>
                 </div>
                 <p className="text-sm">
-                  Hiển thị {filteredOrders.length} đơn hàng • 
+                  Hiển thị {filteredOrders.length} đơn hàng •
                   <span className="font-bold text-emerald-600 ml-2">
                     {formatCurrency(
                       filteredOrders.reduce((sum, order) => sum + (order.total_amount || 0), 0)
@@ -443,6 +446,165 @@ const FarmerOrders = () => {
           </div>
         )}
       </div>
+
+      {/* Order Detail Modal */}
+      {selectedOrder && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity"
+            onClick={() => setSelectedOrder(null)}
+          ></div>
+
+          <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto transform transition-all animate-in fade-in zoom-in duration-200">
+            {/* Modal Header */}
+            <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-md px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
+                  <Package className="text-emerald-600" size={20} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900">Chi tiết đơn hàng</h3>
+                  <p className="text-xs text-gray-500 font-mono">#{selectedOrder.id.toUpperCase()}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedOrder(null)}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <XCircle size={24} className="text-gray-400" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-8">
+              {/* Status Banner */}
+              <div className={`p-4 rounded-2xl border flex items-center justify-between ${selectedOrder.status === 'completed' ? 'bg-emerald-50 border-emerald-100 text-emerald-700' :
+                  selectedOrder.status === 'cancelled' ? 'bg-red-50 border-red-100 text-red-700' :
+                    'bg-blue-50 border-blue-100 text-blue-700'
+                }`}>
+                <div className="flex items-center gap-3">
+                  <AlertCircle size={20} />
+                  <div>
+                    <div className="text-sm font-bold uppercase tracking-wider">Trạng thái</div>
+                    <div className="text-lg font-black">{getStatusBadge(selectedOrder.status)}</div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-xs opacity-70">Cập nhật lần cuối</div>
+                  <div className="text-sm font-semibold">
+                    {new Date(selectedOrder.updated_at || selectedOrder.created_at).toLocaleString('vi-VN')}
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Product Info */}
+                <div className="space-y-4">
+                  <h4 className="text-sm font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                    <ShoppingBag size={14} />
+                    Sản phẩm
+                  </h4>
+                  <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
+                    <div className="font-bold text-gray-900 text-lg mb-1">{selectedOrder.products?.title}</div>
+                    <div className="text-sm text-gray-600 mb-4">
+                      {selectedOrder.quantity} {selectedOrder.products?.unit} x {formatCurrency(selectedOrder.products?.price_per_unit || 0)}
+                    </div>
+                    <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+                      <span className="text-gray-600 font-medium">Thành tiền</span>
+                      <span className="text-xl font-black text-emerald-600">{formatCurrency(selectedOrder.total_amount)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Customer Info */}
+                <div className="space-y-4">
+                  <h4 className="text-sm font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                    <User size={14} />
+                    Khách hàng
+                  </h4>
+                  <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100 space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 font-bold">
+                        {selectedOrder.profiles?.full_name?.charAt(0).toUpperCase()}
+                      </div>
+                      <div className="font-bold text-gray-900">{selectedOrder.profiles?.full_name}</div>
+                    </div>
+                    <div className="space-y-2 text-sm text-gray-600">
+                      <div className="flex items-center gap-2">
+                        <Phone size={14} className="text-gray-400" />
+                        {selectedOrder.profiles?.phone}
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <MapPin size={14} className="text-gray-400 mt-0.5" />
+                        <span>{selectedOrder.delivery_address}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Timeline/History */}
+              <div className="space-y-4">
+                <h4 className="text-sm font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                  <Clock size={14} />
+                  Lịch sử đơn hàng
+                </h4>
+                <div className="relative pl-8 space-y-6 before:absolute before:left-3 before:top-2 before:bottom-2 before:w-0.5 before:bg-gray-100">
+                  <div className="relative">
+                    <div className="absolute -left-8 top-1 w-6 h-6 rounded-full bg-emerald-500 border-4 border-white shadow-sm"></div>
+                    <div>
+                      <div className="font-bold text-gray-900">Đã cập nhật trạng thái: {getStatusBadge(selectedOrder.status)}</div>
+                      <div className="text-xs text-gray-500">{new Date(selectedOrder.updated_at || selectedOrder.created_at).toLocaleString('vi-VN')}</div>
+                    </div>
+                  </div>
+                  <div className="relative opacity-60">
+                    <div className="absolute -left-8 top-1 w-6 h-6 rounded-full bg-gray-300 border-4 border-white shadow-sm"></div>
+                    <div>
+                      <div className="font-bold text-gray-900">Đơn hàng được tạo</div>
+                      <div className="text-xs text-gray-500">{new Date(selectedOrder.created_at).toLocaleString('vi-VN')}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Note Section */}
+              {selectedOrder.note && (
+                <div className="space-y-2">
+                  <h4 className="text-sm font-bold text-gray-400 uppercase tracking-widest">Ghi chú từ khách hàng</h4>
+                  <div className="bg-amber-50 rounded-xl p-4 border border-amber-100 text-amber-800 text-sm italic">
+                    "{selectedOrder.note}"
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-6 bg-gray-50 border-t border-gray-100 flex items-center justify-end gap-3 rounded-b-3xl">
+              <button
+                onClick={() => setSelectedOrder(null)}
+                className="px-6 py-2.5 text-gray-600 font-semibold hover:bg-gray-200 rounded-xl transition-colors"
+              >
+                Đóng
+              </button>
+              {getStatusActions(selectedOrder.status, selectedOrder.id).map((action, idx) => {
+                const ActionIcon = action.icon
+                return (
+                  <button
+                    key={idx}
+                    onClick={() => {
+                      action.onClick()
+                      setSelectedOrder(null)
+                    }}
+                    className={`px-6 py-2.5 text-white font-bold rounded-xl shadow-lg transition-all flex items-center gap-2 ${action.color}`}
+                  >
+                    <ActionIcon size={18} />
+                    {action.label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
