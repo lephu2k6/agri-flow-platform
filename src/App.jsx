@@ -35,6 +35,8 @@ import PublicProductDetail from "./pages/products/ProductDetail"
 import Wishlist from "./pages/Wishlist"
 import Chat from "./pages/Chat"
 
+import AIChatBot from "./components/ai/AIChatBot"
+
 function App() {
   return (
     <Router>
@@ -44,6 +46,7 @@ function App() {
             <ChatProvider>
               <div className="min-h-screen flex flex-col bg-gray-50">
                 <Header />
+                <AIChatBot />
 
                 <main className="flex-1">
                   <Routes>

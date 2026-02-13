@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@hookform/resolvers": "^5.2.2",
     "@supabase/supabase-js": "^2.90.1",
     "@tailwindcss/cli": "^4.1.18",
