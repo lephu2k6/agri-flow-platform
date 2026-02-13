@@ -10,6 +10,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { useCart } from '../../contexts/CartContext'
 import { supabase } from '../../lib/supabase'
 import { wishlistService } from '../../services/wishlist.service'
+import { reviewService } from '../../services/review.service'
 import ProductImageGallery from '../../components/products/ProductImageGallery'
 import ProductVideo from '../../components/products/ProductVideo'
 import OrderForm from '../../components/orders/OrderForm'
@@ -23,6 +24,7 @@ const PublicProductDetail = () => {
 
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [reviews, setReviews] = useState([])
   const [showOrderForm, setShowOrderForm] = useState(false)
   const [selectedQuantity, setSelectedQuantity] = useState(1)
   const [farmerStats, setFarmerStats] = useState(null)
@@ -32,8 +34,20 @@ const PublicProductDetail = () => {
   useEffect(() => {
     if (id) {
       fetchProductDetails()
+      fetchReviews()
     }
   }, [id])
+
+  const fetchReviews = async () => {
+    try {
+      const result = await reviewService.getProductReviews(id)
+      if (result.success) {
+        setReviews(result.data)
+      }
+    } catch (error) {
+      console.error('Fetch reviews error:', error)
+    }
+  }
 
   useEffect(() => {
     if (product?.profiles?.id) {
@@ -87,7 +101,7 @@ const PublicProductDetail = () => {
   const fetchProductDetails = async () => {
     try {
       setLoading(true)
-      
+
       const { data, error } = await supabase
         .from('products')
         .select(`
@@ -113,7 +127,7 @@ const PublicProductDetail = () => {
         .single()
 
       if (error) throw error
-      
+
       setProduct(data)
       setSelectedQuantity(data.min_order_quantity || 1)
 
@@ -150,11 +164,11 @@ const PublicProductDetail = () => {
 
   const getHarvestBadge = () => {
     if (!product.harvest_date) return null
-    
+
     const harvestDate = new Date(product.harvest_date)
     const now = new Date()
     const diffDays = Math.floor((harvestDate - now) / (1000 * 60 * 60 * 24))
-    
+
     if (diffDays <= 3 && diffDays >= 0) {
       return (
         <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-full">
@@ -229,7 +243,7 @@ const PublicProductDetail = () => {
 
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
+
           {/* Left Column: Gallery & Description */}
           <div className="lg:col-span-2 space-y-6">
             {/* Main Gallery */}
@@ -247,7 +261,7 @@ const PublicProductDetail = () => {
               <h2 className="text-2xl font-bold text-gray-900 mb-6 pb-4 border-b border-emerald-100">
                 Thông tin sản phẩm
               </h2>
-              
+
               <div className="grid grid-cols-2 gap-6 mb-8">
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
@@ -259,7 +273,7 @@ const PublicProductDetail = () => {
                       <p className="font-semibold text-gray-800">{product.categories?.name}</p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg bg-sky-50 flex items-center justify-center">
                       <Package size={20} className="text-sky-600" />
@@ -270,7 +284,7 @@ const PublicProductDetail = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center">
@@ -283,7 +297,7 @@ const PublicProductDetail = () => {
                       </p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center">
                       <Truck size={20} className="text-purple-600" />
@@ -313,6 +327,108 @@ const PublicProductDetail = () => {
                 </div>
               )}
             </div>
+
+            {/* Customer Reviews Section */}
+            <div className="bg-white rounded-2xl shadow-lg border border-emerald-100 p-8">
+              <div className="flex items-center justify-between mb-8 pb-4 border-b border-emerald-50">
+                <h2 className="text-2xl font-bold text-gray-900">Đánh giá từ khách hàng</h2>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-500">Tổng cộng {reviews.length} đánh giá</span>
+                </div>
+              </div>
+
+              {reviews.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+                  {/* Rating Summary Left */}
+                  <div className="md:col-span-1 space-y-6">
+                    <div className="bg-emerald-50 rounded-[2rem] p-8 text-center border border-emerald-100 shadow-inner">
+                      <div className="text-6xl font-black text-emerald-600 mb-2 italic">
+                        {product.average_rating > 0 ? Number(product.average_rating).toFixed(1) : '5.0'}
+                      </div>
+                      <div className="flex justify-center gap-1 mb-3">
+                        {[1, 2, 3, 4, 5].map((s) => (
+                          <Star
+                            key={s}
+                            size={20}
+                            className={s <= (product.average_rating || 5) ? 'text-amber-400 fill-amber-400' : 'text-gray-200'}
+                          />
+                        ))}
+                      </div>
+                      <p className="text-sm font-bold text-emerald-700 uppercase tracking-widest italic">Điểm tin cậy</p>
+                    </div>
+
+                    <div className="space-y-3 px-2">
+                      {[5, 4, 3, 2, 1].map((s) => {
+                        const count = reviews.filter(r => r.rating === s).length
+                        const percent = reviews.length > 0 ? (count / reviews.length) * 100 : 0
+                        return (
+                          <div key={s} className="flex items-center gap-3">
+                            <span className="text-xs font-bold text-gray-500 w-4">{s}</span>
+                            <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-amber-400 rounded-full shadow-[0_0_8px_rgba(251,191,36,0.5)]"
+                                style={{ width: `${percent > 0 ? percent : s === 5 ? 100 : 0}%` }}
+                              />
+                            </div>
+                            <span className="text-[10px] font-medium text-gray-400 w-8">{percent > 0 ? `${Math.round(percent)}%` : s === 5 ? '100%' : '0%'}</span>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Reviews List Right */}
+                  <div className="md:col-span-2 space-y-8">
+                    <div className="max-h-[600px] overflow-y-auto pr-4 custom-scrollbar">
+                      <div className="divide-y divide-emerald-50">
+                        {reviews.map((review) => (
+                          <div key={review.id} className="py-6 first:pt-0 last:pb-0">
+                            <div className="flex items-start gap-4">
+                              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-100 to-sky-100 flex items-center justify-center text-emerald-700 font-bold shadow-sm shrink-0 border-2 border-white ring-1 ring-emerald-50">
+                                {review.profiles?.full_name?.charAt(0).toUpperCase() || 'B'}
+                              </div>
+                              <div className="flex-1">
+                                <div className="flex items-center justify-between mb-1">
+                                  <h4 className="font-bold text-gray-800">{review.profiles?.full_name}</h4>
+                                  <span className="text-[10px] text-gray-400 font-medium">
+                                    {new Date(review.created_at).toLocaleDateString('vi-VN')}
+                                  </span>
+                                </div>
+                                <div className="flex gap-1 mb-3">
+                                  {[1, 2, 3, 4, 5].map((s) => (
+                                    <Star
+                                      key={s}
+                                      size={12}
+                                      className={s <= review.rating ? 'text-amber-400 fill-amber-400' : 'text-gray-200'}
+                                    />
+                                  ))}
+                                </div>
+                                <div className="p-4 bg-emerald-50/40 rounded-2xl border border-emerald-50/50 relative">
+                                  <div className="absolute -left-1.5 top-4 w-3 h-3 bg-emerald-50/40 border-l border-b border-emerald-50/50 rotate-45"></div>
+                                  <p className="text-sm text-gray-700 leading-relaxed font-medium italic">
+                                    "{review.comment}"
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="py-16 text-center">
+                  <div className="w-20 h-20 bg-neutral-50 rounded-[2rem] flex items-center justify-center mx-auto mb-6 border-2 border-dashed border-neutral-200">
+                    <Star size={32} className="text-neutral-300" />
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-400 italic">Sản phẩm chưa có đánh giá nào</h3>
+                  <p className="text-gray-500 text-sm mt-2 max-w-sm mx-auto uppercase tracking-widest font-black opacity-50">
+                    Hãy là người đầu tiên trải nghiệm và chia sẻ cảm nhận về nông sản tuyệt vời này!
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Right Column: Purchase Info */}
@@ -321,8 +437,28 @@ const PublicProductDetail = () => {
               {/* Purchase Card */}
               <div className="bg-white rounded-2xl shadow-xl border border-emerald-100 overflow-hidden mb-6">
                 <div className="p-6">
-                  <h1 className="text-2xl font-bold text-gray-900 mb-4">{product.title}</h1>
-                  
+                  <h1 className="text-2xl font-bold text-gray-900 mb-2">{product.title}</h1>
+
+                  {/* Real Rating Info */}
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((s) => (
+                        <Star
+                          key={s}
+                          size={16}
+                          className={s <= (product.average_rating || 5) ? 'text-amber-400 fill-amber-400' : 'text-gray-200'}
+                        />
+                      ))}
+                      <span className="ml-2 font-bold text-gray-900">
+                        {product.average_rating > 0 ? Number(product.average_rating).toFixed(1) : '5.0'}
+                      </span>
+                    </div>
+                    <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
+                    <div className="text-sm text-gray-500 hover:text-emerald-600 cursor-pointer transition-colors">
+                      {product.total_reviews || 0} đánh giá thực tế
+                    </div>
+                  </div>
+
                   {/* Price Section */}
                   <div className="mb-6">
                     <div className="flex items-baseline gap-2 mb-2">
@@ -346,7 +482,7 @@ const PublicProductDetail = () => {
                         </span>
                       </div>
                     </div>
-                    
+
                     <div className="flex justify-between items-center">
                       <div className="text-sm text-gray-500">Đơn tối thiểu</div>
                       <div className="font-bold text-gray-800">
@@ -362,7 +498,7 @@ const PublicProductDetail = () => {
                       <span className="text-sm text-gray-500">Tổng: {formatCurrency(calculateTotal())}₫</span>
                     </div>
                     <div className="flex items-center border border-emerald-200 rounded-xl overflow-hidden bg-emerald-50">
-                      <button 
+                      <button
                         onClick={() => setSelectedQuantity(q => Math.max(product.min_order_quantity || 1, q - 1))}
                         className="w-12 h-12 bg-white hover:bg-emerald-50 flex items-center justify-center text-gray-600 hover:text-emerald-600 border-r border-emerald-200 text-lg font-bold"
                       >
@@ -372,7 +508,7 @@ const PublicProductDetail = () => {
                         <span className="text-xl font-bold text-gray-800">{selectedQuantity}</span>
                         <span className="text-sm text-gray-500 ml-1">{product.unit}</span>
                       </div>
-                      <button 
+                      <button
                         onClick={() => setSelectedQuantity(q => Math.min(product.quantity, q + 1))}
                         className="w-12 h-12 bg-white hover:bg-emerald-50 flex items-center justify-center text-gray-600 hover:text-emerald-600 border-l border-emerald-200 text-lg font-bold"
                       >
@@ -392,7 +528,7 @@ const PublicProductDetail = () => {
                         MUA NGAY
                       </div>
                     </button>
-                    
+
                     <div className="grid grid-cols-2 gap-3">
                       <button
                         onClick={() => {
@@ -407,21 +543,20 @@ const PublicProductDetail = () => {
                         <ShoppingCart size={18} />
                         Giỏ hàng
                       </button>
-                      
+
                       <button
                         onClick={handleWishlistToggle}
                         disabled={wishlistLoading}
-                        className={`py-3 border-2 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${
-                          isInWishlist
-                            ? 'bg-pink-50 border-pink-500 text-pink-600 hover:bg-pink-100'
-                            : 'bg-white border-emerald-500 text-emerald-600 hover:bg-emerald-50'
-                        } disabled:opacity-50`}
+                        className={`py-3 border-2 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${isInWishlist
+                          ? 'bg-pink-50 border-pink-500 text-pink-600 hover:bg-pink-100'
+                          : 'bg-white border-emerald-500 text-emerald-600 hover:bg-emerald-50'
+                          } disabled:opacity-50`}
                       >
                         <Heart size={18} className={isInWishlist ? 'fill-pink-500' : ''} />
                         {isInWishlist ? 'Đã thích' : 'Yêu thích'}
                       </button>
                     </div>
-                    
+
                     <div className="w-full">
                       <ChatButton
                         farmerId={product.farmer_id}
@@ -465,27 +600,29 @@ const PublicProductDetail = () => {
                     <div className="text-xs text-gray-600">Sản phẩm</div>
                   </div>
                   <div className="bg-sky-50 rounded-lg p-3 text-center">
-                    <div className="text-lg font-bold text-sky-600">4.8</div>
+                    <div className="text-lg font-bold text-sky-600">
+                      {product.profiles?.rating > 0 ? Number(product.profiles.rating).toFixed(1) : '5.0'}
+                    </div>
                     <div className="text-xs text-gray-600">Đánh giá</div>
                   </div>
                 </div>
 
                 {/* Contact Info */}
-                 <div className="space-y-3">
-                     <div className="flex items-center justify-between text-sm">
-                         <span className="text-gray-500">Điện thoại:</span>
-                            <span className="font-medium text-gray-800 italic">
-                               {product.profiles?.phone 
-                                    ? "**********" 
-                                    : 'Chưa cập nhật'}
-                             </span>
-                       </div>
-                              
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-500">Tham gia:</span>
-                          <span className="font-medium text-gray-800">6 tháng</span>
-                       </div>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-500">Điện thoại:</span>
+                    <span className="font-medium text-gray-800 italic">
+                      {product.profiles?.phone
+                        ? "**********"
+                        : 'Chưa cập nhật'}
+                    </span>
                   </div>
+
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-500">Tham gia:</span>
+                    <span className="font-medium text-gray-800">6 tháng</span>
+                  </div>
+                </div>
 
                 <button
                   onClick={() => navigate(`/farmers/${product.profiles?.id}`)}

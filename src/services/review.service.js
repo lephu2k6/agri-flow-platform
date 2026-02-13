@@ -36,7 +36,7 @@ export const reviewService = {
         .from('reviews')
         .select(`
           *,
-          profiles:buyer_id (
+          profiles!buyer_id (
             id,
             full_name,
             avatar_url
@@ -114,6 +114,69 @@ export const reviewService = {
       return { success: true, data }
     } catch (error) {
       return { success: false, error: error.message }
+    }
+  },
+
+  // Lấy tất cả đánh giá của một nông dân (thông qua các sản phẩm của họ)
+  async getFarmerReviews(farmerId) {
+    try {
+      // 1. Lấy tất cả product_ids của nông dân này
+      const { data: products } = await supabase
+        .from('products')
+        .select('id')
+        .eq('farmer_id', farmerId)
+
+      const productIds = products?.map(p => p.id) || []
+
+      // 2. Lấy đánh giá của các sản phẩm đó
+      const { data, error } = await supabase
+        .from('reviews')
+        .select(`
+          *,
+          profiles!buyer_id (full_name, avatar_url),
+          products:product_id (title)
+        `)
+        .in('product_id', productIds)
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+      return { success: true, data }
+    } catch (error) {
+      return { success: false, error: error.message }
+    }
+  },
+
+  // Lấy tóm tắt rating của nông dân
+  async getFarmerRatingSummary(farmerId) {
+    try {
+      const { data: products } = await supabase
+        .from('products')
+        .select('id')
+        .eq('farmer_id', farmerId)
+
+      const productIds = products?.map(p => p.id) || []
+
+      const { data: reviews, error } = await supabase
+        .from('reviews')
+        .select('rating')
+        .in('product_id', productIds)
+
+      if (error) throw error
+
+      if (!reviews || reviews.length === 0) {
+        return { success: true, averageRating: 0, totalReviews: 0 }
+      }
+
+      const totalReviews = reviews.length
+      const averageRating = reviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews
+
+      return {
+        success: true,
+        averageRating: Math.round(averageRating * 10) / 10,
+        totalReviews
+      }
+    } catch (error) {
+      return { success: false, averageRating: 0, totalReviews: 0 }
     }
   }
 }

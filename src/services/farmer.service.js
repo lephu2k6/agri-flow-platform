@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase'
+import { reviewService } from './review.service'
 
 export const farmerService = {
   // =============== QUẢN LÝ SẢN PHẨM ===============
@@ -63,7 +64,7 @@ export const farmerService = {
         const file = files[i]
         const fileExt = file.name.split('.').pop()
         const fileName = `${productId}/${Date.now()}-${i}.${fileExt}`
-        
+
         const { error: uError } = await supabase.storage
           .from('product-images')
           .upload(fileName, file)
@@ -72,11 +73,11 @@ export const farmerService = {
           const { data: { publicUrl } } = supabase.storage
             .from('product-images')
             .getPublicUrl(fileName)
-          
+
           imageInserts.push({
             product_id: productId,
             image_url: publicUrl,
-            is_primary: i === 0 
+            is_primary: i === 0
           })
         }
       }
@@ -102,7 +103,7 @@ export const farmerService = {
       `)
       .eq('farmer_id', farmerId)
       .order('created_at', { ascending: false })
-    
+
     return { success: !error, products: data || [], error: error?.message }
   },
   async deleteProduct(productId) {
@@ -111,44 +112,71 @@ export const farmerService = {
         .from('products')
         .delete()
         .eq('id', productId)
-        
+
       if (error) throw error
       return { success: true, data }
-    }catch (error) {
+    } catch (error) {
       return { success: false, error: error.message }
     }
-  } , 
+  },
   // =============== THỐNG KÊ DASHBOARD ===============
-  async getFarmerStats(farmerId) {
+  async getFarmerStats(farmerId, period = 'month') {
     try {
+      // 1. Tính toán khoảng thời gian
+      const now = new Date()
+      let startDate = new Date()
+
+      if (period === 'week') startDate.setDate(now.getDate() - 7)
+      else if (period === 'month') startDate.setMonth(now.getMonth() - 1)
+      else if (period === 'quarter') startDate.setMonth(now.getMonth() - 3)
+      else if (period === 'year') startDate.setFullYear(now.getFullYear() - 1)
+
+      // 2. Lấy danh sách sản phẩm
       const { data: products } = await supabase
         .from('products')
         .select('id')
         .eq('farmer_id', farmerId)
-      
+
       const productIds = products?.map(p => p.id) || []
 
-      const { data: orders, error } = await supabase
+      // 3. Lấy danh sách đơn hàng theo period
+      let query = supabase
         .from('orders')
-        .select('*')
+        .select(`
+          *,
+          profiles:buyer_id (full_name)
+        `)
         .in('product_id', productIds)
+        .order('created_at', { ascending: false })
+
+      if (period !== 'all') {
+        query = query.gte('created_at', startDate.toISOString())
+      }
+
+      const { data: orders, error } = await query
 
       if (error) throw error
+
+      // 4. Lấy thông tin rating từ reviewService
+      const ratingSummary = await reviewService.getFarmerRatingSummary(farmerId)
 
       const stats = {
         totalProducts: products?.length || 0,
         totalOrders: orders?.length || 0,
         totalRevenue: orders?.filter(o => o.status === 'completed')
-                            .reduce((sum, o) => sum + (o.total_amount || 0), 0),
+          .reduce((sum, o) => sum + (o.total_amount || 0), 0),
         statusDistribution: orders?.reduce((acc, o) => {
           acc[o.status] = (acc[o.status] || 0) + 1
           return acc
         }, { pending: 0, confirmed: 0, shipped: 0, completed: 0, cancelled: 0 }),
-        recentOrders: orders?.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 5)
+        recentOrders: orders?.slice(0, 5),
+        rating: ratingSummary.averageRating,
+        totalReviews: ratingSummary.totalReviews
       }
 
       return { success: true, stats }
     } catch (error) {
+      console.error("Lỗi GetFarmerStats:", error)
       return { success: false, error: error.message }
     }
   },
