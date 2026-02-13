@@ -1,23 +1,43 @@
-import React, { useState } from "react"
+import React, { useState, useEffect, useRef } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { 
   Package, User, LogOut, Menu, X, 
   LayoutDashboard, PlusCircle, 
   Store, ClipboardList, ShoppingBag,
-  Leaf, Truck, Users, BarChart3, ShoppingCart, Heart,MessageCircle 
+  Leaf, Truck, Users, BarChart3, ShoppingCart, Heart, MessageCircle, ChevronDown
 } from "lucide-react"
 import { supabase } from "../../lib/supabase";
 import { useAuth } from '../../hooks/useAuth';
 import { useCart } from '../../contexts/CartContext';
 import { useChat } from '../../contexts/ChatContext';
 import NotificationBell from '../notifications/NotificationBell';
+import logo from '../../assets/img/logo.png';
 
 const Header = () => {
   const { user, profile, signOut, signIn } = useAuth()
   const { getCartItemCount } = useCart()
   const { unreadCount } = useChat()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false)
   const navigate = useNavigate()
+  const dropdownRef = useRef(null)
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setUserDropdownOpen(false)
+      }
+    }
+
+    if (userDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [userDropdownOpen])
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -63,10 +83,7 @@ const Header = () => {
           {/* LOGO */}
           <Link to="/" className="flex items-center space-x-3 group">
             <div className="relative">
-              <div className="w-12 h-12 rounded-xl bg-linear-to-r from-emerald-500 to-emerald-600 flex items-center justify-center shadow-md group-hover:shadow-lg transition-all group-hover:scale-105">
-                <Package className="h-6 w-6 text-white" />
-              </div>
-              <div className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-400 rounded-full border-2 border-white"></div>
+              <img src= {logo}   alt="Avatar" className="w-17 h-17"></img>
             </div>
             <div className="flex flex-col">
               <span className="text-2xl font-black bg-linear-to-r from-emerald-600 to-emerald-700 bg-clip-text text-transparent tracking-tight">
@@ -108,32 +125,11 @@ const Header = () => {
               <div className="flex items-center space-x-1 ml-2">
                 <div className="h-8 w-px bg-emerald-100"></div>
                 <Link 
-                  to="/farmer/dashboard" 
-                  className="px-4 py-2.5 text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all flex items-center gap-2 text-sm font-semibold"
-                >
-                  <LayoutDashboard size={16} className="text-emerald-500"/>
-                  Dashboard
-                </Link>
-                <Link 
                   to="/farmer/products" 
                   className="px-4 py-2.5 text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all flex items-center gap-2 text-sm font-semibold"
                 >
                   <BarChart3 size={16} className="text-emerald-500"/>
                   Sản phẩm
-                </Link>
-                <Link 
-                  to="/farmer/inventory" 
-                  className="px-4 py-2.5 text-gray-700 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all flex items-center gap-2 text-sm font-semibold"
-                >
-                  <Package size={16} className="text-emerald-500"/>
-                  Kho hàng
-                </Link>
-                <Link 
-                  to="/farmer/orders" 
-                  className="px-4 py-2.5 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-xl transition-all flex items-center gap-2 text-sm font-semibold"
-                >
-                  <ClipboardList size={16} className="text-blue-500"/>
-                  Đơn hàng
                 </Link>
                 <Link 
                   to="/farmer/products/create" 
@@ -145,19 +141,7 @@ const Header = () => {
               </div>
             )}
 
-            {/* BUYER MENU */}
-            {profile?.role === "buyer" && (
-              <div className="flex items-center space-x-1 ml-2">
-                <div className="h-8 w-px bg-blue-100"></div>
-                <Link 
-                  to="/buyer/orders" 
-                  className="px-4 py-2.5 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-xl transition-all flex items-center gap-2 text-sm font-semibold"
-                >
-                  <ShoppingBag size={16} className="text-blue-500"/>
-                  Đơn hàng
-                </Link>
-              </div>
-            )}
+            {/* BUYER MENU - removed, now in dropdown */}
           </nav>
 
           {/* DESKTOP USER ACTION */}
@@ -190,29 +174,93 @@ const Header = () => {
             {user ? (
               <div className="flex items-center gap-3">
                 {getRoleBadge()}
-                <div className="flex items-center bg-white border border-emerald-100 p-1.5 rounded-2xl shadow-sm">
-                  <Link 
-                    to="/profile" 
-                    className="flex items-center space-x-3 px-3 py-1.5 hover:bg-emerald-50 rounded-xl transition-all"
-                  >
-                    <div className="relative">
-                      <div className="w-10 h-10 rounded-full bg-linear-to-r from-emerald-100 to-sky-100 flex items-center justify-center text-emerald-600 font-bold text-lg">
-                        {profile?.full_name?.charAt(0).toUpperCase() || "U"}
+                <div className="relative" ref={dropdownRef}>
+                  <div className="flex items-center bg-white border border-emerald-100 p-1.5 rounded-2xl shadow-sm">
+                    <button
+                      onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                      className="flex items-center space-x-3 px-3 py-1.5 hover:bg-emerald-50 rounded-xl transition-all"
+                    >
+                      <div className="relative">
+                        <div className="w-10 h-10 rounded-full bg-linear-to-r from-emerald-100 to-sky-100 flex items-center justify-center text-emerald-600 font-bold text-lg">
+                          {profile?.full_name?.charAt(0).toUpperCase() || "U"}
+                        </div>
+                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-400 rounded-full border-2 border-white"></div>
                       </div>
-                      <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-400 rounded-full border-2 border-white"></div>
-                    </div>
-                    <div className="flex flex-col items-start">
-                      <span className="text-sm font-bold text-gray-800 leading-tight">{profile?.full_name || "User"}</span>
-                      <span className="text-xs text-gray-500">{profile?.email || ""}</span>
-                    </div>
-                  </Link>
+                      <div className="flex flex-col items-start">
+                        <span className="text-sm font-bold text-gray-800 leading-tight">{profile?.full_name || "User"}</span>
+                        <span className="text-xs text-gray-500">{profile?.email || ""}</span>
+                      </div>
+                      <ChevronDown size={16} className={`text-gray-500 transition-transform ${userDropdownOpen ? 'rotate-180' : ''}`} />
+                    </button>
 
-                  <button
-                    onClick={handleLogout}
-                    className="ml-2 p-2.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors"
-                  >
-                    <LogOut className="h-4 w-4" />
-                  </button>
+                    <button
+                      onClick={handleLogout}
+                      className="ml-2 p-2.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+                    >
+                      <LogOut className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  {/* Dropdown Menu */}
+                  {userDropdownOpen && (
+                    <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-xl border border-emerald-100 py-2 z-50">
+                      {/* Profile Link */}
+                      <Link 
+                        to="/profile"
+                        onClick={() => setUserDropdownOpen(false)}
+                        className="flex items-center gap-3 px-4 py-3 hover:bg-emerald-50 transition-all"
+                      >
+                        <User size={18} className="text-emerald-500"/>
+                        <span className="font-semibold text-gray-700">Hồ sơ cá nhân</span>
+                      </Link>
+
+                      {/* Farmer Menu Items */}
+                      {profile?.role === "farmer" && (
+                        <>
+                          <div className="h-px bg-emerald-100 my-2"></div>
+                          <Link 
+                            to="/farmer/dashboard"
+                            onClick={() => setUserDropdownOpen(false)}
+                            className="flex items-center gap-3 px-4 py-3 hover:bg-emerald-50 transition-all"
+                          >
+                            <LayoutDashboard size={18} className="text-emerald-500"/>
+                            <span className="font-semibold text-gray-700">Dashboard</span>
+                          </Link>
+                          <Link 
+                            to="/farmer/inventory"
+                            onClick={() => setUserDropdownOpen(false)}
+                            className="flex items-center gap-3 px-4 py-3 hover:bg-emerald-50 transition-all"
+                          >
+                            <Package size={18} className="text-emerald-500"/>
+                            <span className="font-semibold text-gray-700">Kho hàng</span>
+                          </Link>
+                          <Link 
+                            to="/farmer/orders"
+                            onClick={() => setUserDropdownOpen(false)}
+                            className="flex items-center gap-3 px-4 py-3 hover:bg-blue-50 transition-all"
+                          >
+                            <ClipboardList size={18} className="text-blue-500"/>
+                            <span className="font-semibold text-blue-600">Đơn hàng</span>
+                          </Link>
+                        </>
+                      )}
+
+                      {/* Buyer Menu Items */}
+                      {profile?.role === "buyer" && (
+                        <>
+                          <div className="h-px bg-emerald-100 my-2"></div>
+                          <Link 
+                            to="/buyer/orders"
+                            onClick={() => setUserDropdownOpen(false)}
+                            className="flex items-center gap-3 px-4 py-3 hover:bg-blue-50 transition-all"
+                          >
+                            <ShoppingBag size={18} className="text-blue-500"/>
+                            <span className="font-semibold text-blue-600">Đơn hàng của tôi</span>
+                          </Link>
+                        </>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             ) : (
