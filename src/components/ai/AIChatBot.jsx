@@ -1,9 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageSquare, X, Send, Bot, User, Loader2, Sparkles, MinusCircle } from 'lucide-react';
 import { aiService } from '../../services/ai.service';
+import { useAuth } from '../../hooks/useAuth';
 import toast from 'react-hot-toast';
 
 const AIChatBot = () => {
+    const { profile } = useAuth();
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState([
         { role: 'model', text: 'Chào bạn! Tôi là AgriFlow AI. Tôi có thể giúp gì cho bạn về nông sản hoặc quy trình mua hàng hôm nay?' }
@@ -35,7 +37,7 @@ const AIChatBot = () => {
             parts: [{ text: msg.text }]
         }));
 
-        const result = await aiService.chatWithAI(userMessage, history);
+        const result = await aiService.chatWithAI(userMessage, history, profile);
 
         if (result.success) {
             setMessages(prev => [...prev, { role: 'model', text: result.text }]);
@@ -100,8 +102,8 @@ const AIChatBot = () => {
                                         {msg.role === 'user' ? <User size={14} /> : <Bot size={14} />}
                                     </div>
                                     <div className={`p-4 rounded-3xl text-sm leading-relaxed shadow-sm ${msg.role === 'user'
-                                            ? 'bg-emerald-600 text-white rounded-tr-none'
-                                            : 'bg-white text-gray-700 border border-emerald-50 rounded-tl-none font-medium'
+                                        ? 'bg-emerald-600 text-white rounded-tr-none'
+                                        : 'bg-white text-gray-700 border border-emerald-50 rounded-tl-none font-medium'
                                         }`}>
                                         {msg.text}
                                     </div>
@@ -123,6 +125,28 @@ const AIChatBot = () => {
                         <div ref={messagesEndRef} />
                     </div>
 
+                    {/* Quick Suggestions - Phân biệt theo Profile */}
+                    {!isLoading && (
+                        <div className="px-6 py-3 bg-white flex gap-2 overflow-x-auto scrollbar-hide border-t border-emerald-50">
+                            {(profile?.role === 'farmer'
+                                ? ["📈 Phân tích giá chợ", "📊 Cách tăng doanh số", "📦 Tư vấn hàng hóa"]
+                                : ["🍎 Sản phẩm ngon nhất?", "💰 Tìm giá rẻ nhất", "🌿 Nông sản sạch là gì?"]
+                            ).map((prompt, i) => (
+                                <button
+                                    key={i}
+                                    onClick={() => {
+                                        setInput(prompt);
+                                        // Gửi đi ngay lập tức
+                                        setTimeout(() => document.getElementById('chat-submit-btn')?.click(), 50);
+                                    }}
+                                    className="whitespace-nowrap px-4 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold rounded-full transition-all border border-emerald-100 shadow-sm flex-shrink-0"
+                                >
+                                    {prompt}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+
                     {/* Input Area */}
                     <form onSubmit={handleSend} className="p-6 bg-white border-t border-emerald-50">
                         <div className="relative group">
@@ -134,6 +158,7 @@ const AIChatBot = () => {
                                 className="w-full pl-6 pr-14 py-4 bg-gray-50 border-2 border-transparent focus:border-emerald-500 focus:bg-white rounded-2xl outline-none transition-all font-medium text-gray-700 placeholder-gray-400 shadow-inner"
                             />
                             <button
+                                id="chat-submit-btn"
                                 type="submit"
                                 disabled={!input.trim() || isLoading}
                                 className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-emerald-600 text-white rounded-xl flex items-center justify-center hover:bg-emerald-700 disabled:opacity-50 disabled:grayscale transition-all shadow-lg active:scale-95"
