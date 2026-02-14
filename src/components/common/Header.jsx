@@ -1,11 +1,10 @@
-
 import React, { useState, useRef, useEffect } from "react"
 import { Link } from "react-router-dom"
 import {
   Package, LogOut, Menu, X,
   LayoutDashboard, PlusCircle,
   Store, ClipboardList, ShoppingBag,
-  Leaf, ShoppingCart, MessageCircle, ChevronDown, Warehouse, User
+  Leaf, ShoppingCart, MessageCircle, ChevronDown, Warehouse, User, LogIn
 } from "lucide-react"
 import { supabase } from "../../lib/supabase"
 import { useAuth } from '../../hooks/useAuth'
@@ -85,10 +84,11 @@ const Header = () => {
 
           {/* CENTER NAVIGATION - Desktop Only - ABSOLUTE CENTERED */}
           <div className="hidden lg:flex absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-0">
-            <nav className="flex items-center gap-1 bg-emerald-50/80 backdrop-blur-sm p-1.5 rounded-full border border-emerald-100/50 shadow-sm">
-              
-              {/* Tin nhắn - Visible for everyone */}
-              {user && (
+            {/* CHỈ HIỂN THỊ MENU KHI ĐÃ ĐĂNG NHẬP */}
+            {user && (
+              <nav className="flex items-center gap-1 bg-emerald-50/80 backdrop-blur-sm p-1.5 rounded-full border border-emerald-100/50 shadow-sm">
+                
+                {/* Tin nhắn - Visible for everyone */}
                 <Link
                   to="/chat"
                   className="flex items-center gap-2 px-5 py-2 text-sm font-bold text-gray-600 hover:text-emerald-700 hover:bg-white rounded-full transition-all relative group"
@@ -101,54 +101,51 @@ const Header = () => {
                     </span>
                   )}
                 </Link>
-              )}
 
-              {/* FARMER NAVIGATION */}
-              {profile?.role === "farmer" && (
-                <>
-                  <div className="w-px h-4 bg-emerald-200 mx-1"></div>
-                  {/* Farmer: Sản phẩm (Quản lý) */}
-                  <Link
-                    to="/farmer/products"
-                    className="flex items-center gap-2 px-5 py-2 text-sm font-bold text-gray-600 hover:text-emerald-700 hover:bg-white rounded-full transition-all group"
-                  >
-                    <Package size={18} className="group-hover:scale-110 transition-transform"/>
-                    <span>Sản phẩm</span>
-                  </Link>
-                  {/* Farmer: Đơn hàng (Quản lý) */}
-                  <Link
-                    to="/farmer/orders"
-                    className="flex items-center gap-2 px-5 py-2 text-sm font-bold text-gray-600 hover:text-emerald-700 hover:bg-white rounded-full transition-all group"
-                  >
-                    <ClipboardList size={18} className="group-hover:scale-110 transition-transform"/>
-                    <span>Đơn hàng</span>
-                  </Link>
-                </>
-              )}
+                {/* FARMER NAVIGATION */}
+                {profile?.role === "farmer" && (
+                  <>
+                    <div className="w-px h-4 bg-emerald-200 mx-1"></div>
+                    <Link
+                      to="/farmer/products"
+                      className="flex items-center gap-2 px-5 py-2 text-sm font-bold text-gray-600 hover:text-emerald-700 hover:bg-white rounded-full transition-all group"
+                    >
+                      <Package size={18} className="group-hover:scale-110 transition-transform"/>
+                      <span>Sản phẩm</span>
+                    </Link>
+                    <Link
+                      to="/farmer/orders"
+                      className="flex items-center gap-2 px-5 py-2 text-sm font-bold text-gray-600 hover:text-emerald-700 hover:bg-white rounded-full transition-all group"
+                    >
+                      <ClipboardList size={18} className="group-hover:scale-110 transition-transform"/>
+                      <span>Đơn hàng</span>
+                    </Link>
+                  </>
+                )}
 
-               {/* BUYER NAVIGATION */}
-               {profile?.role === "buyer" && (
-                <>
-                  <div className="w-px h-4 bg-emerald-200 mx-1"></div>
-                  {/* Buyer: Chợ Nông Sản (Mua hàng) */}
-                  <Link
-                    to="/products"
-                    className="flex items-center gap-2 px-5 py-2 text-sm font-bold text-gray-600 hover:text-emerald-700 hover:bg-white rounded-full transition-all group"
-                  >
-                    <Store size={18} className="group-hover:scale-110 transition-transform"/>
-                    <span>Chợ Nông Sản</span>
-                  </Link>
-                  {/* Buyer: Đơn hàng (Của tôi) */}
-                  <Link
-                    to="/buyer/orders"
-                    className="flex items-center gap-2 px-5 py-2 text-sm font-bold text-gray-600 hover:text-emerald-700 hover:bg-white rounded-full transition-all group"
-                  >
-                    <ClipboardList size={18} className="group-hover:scale-110 transition-transform"/>
-                    <span>Đơn hàng</span>
-                  </Link>
-                </>
-              )}
-            </nav>
+                 {/* BUYER NAVIGATION */}
+                 {profile?.role === "buyer" && (
+                  <>
+                    <div className="w-px h-4 bg-emerald-200 mx-1"></div>
+                    <Link
+                      to="/products"
+                      className="flex items-center gap-2 px-5 py-2 text-sm font-bold text-gray-600 hover:text-emerald-700 hover:bg-white rounded-full transition-all group"
+                    >
+                      <Store size={18} className="group-hover:scale-110 transition-transform"/>
+                      <span>Chợ Nông Sản</span>
+                    </Link>
+                    <Link
+                      to="/buyer/orders"
+                      className="flex items-center gap-2 px-5 py-2 text-sm font-bold text-gray-600 hover:text-emerald-700 hover:bg-white rounded-full transition-all group"
+                    >
+                      <ClipboardList size={18} className="group-hover:scale-110 transition-transform"/>
+                      <span>Đơn hàng</span>
+                    </Link>
+                  </>
+                )}
+              </nav>
+            )}
+            {/* NẾU CHƯA ĐĂNG NHẬP THÌ Ở GIỮA SẼ TRỐNG */}
           </div>
 
           {/* RIGHT ACTIONS */}
@@ -165,8 +162,8 @@ const Header = () => {
              </Link>
             )}
 
-            {/* Cart - Hide for Farmer */}
-            {profile?.role !== "farmer" && (
+            {/* Cart - ONLY SHOW FOR LOGGED IN BUYER */}
+            {profile?.role === "buyer" && (
               <Link
                 to="/cart"
                 className="relative p-2.5 text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-full transition-all"
@@ -180,7 +177,8 @@ const Header = () => {
               </Link>
             )}
 
-            {user && (
+            {/* LOGGED IN USER ACTIONS */}
+            {user ? (
               <>
                 <div className="hidden md:block">
                     <NotificationBell />
@@ -208,7 +206,7 @@ const Header = () => {
                   {userDropdownOpen && (
                     <div className="absolute right-0 mt-3 w-72 bg-white rounded-2xl shadow-xl border border-gray-100 py-3 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
                       
-                      {/* User Info Header in Dropdown */}
+                      {/* User Info Header */}
                       <div className="px-5 py-3 border-b border-gray-100 flex items-center gap-3">
                          <div className="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-xl border-2 border-emerald-100">
                             {profile?.full_name?.charAt(0).toUpperCase()}
@@ -221,9 +219,8 @@ const Header = () => {
                          </div>
                       </div>
 
-                      {/* ITEMS IN DROPDOWN */}
+                      {/* Dropdown Items */}
                       <div className="py-2 px-2">
-                         {/* Common Items */}
                         <Link
                           to="/"
                           className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 rounded-xl transition-all text-gray-700 font-medium"
@@ -233,7 +230,6 @@ const Header = () => {
                           <span>Trang chủ</span>
                         </Link>
                          
-                         {/* Farmer Specific Dropdown Items */}
                         {profile?.role === "farmer" && (
                             <>
                                 <Link
@@ -258,7 +254,6 @@ const Header = () => {
 
                       <div className="h-px bg-gray-100 mx-4 my-1"></div>
 
-                      {/* Profile & Logout */}
                       <div className="px-2 py-2">
                         <Link
                           to="/profile"
@@ -283,6 +278,22 @@ const Header = () => {
                   )}
                 </div>
               </>
+            ) : (
+              // GUEST ACTIONS (LOGIN / REGISTER ONLY)
+              <>
+                <Link 
+                  to="/login" 
+                  className="hidden md:block px-4 py-2 font-bold text-gray-600 hover:text-emerald-700 transition-colors"
+                >
+                  Đăng nhập
+                </Link>
+                <Link 
+                  to="/register" 
+                  className="hidden md:block px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-full shadow-md hover:shadow-lg transition-all"
+                >
+                  Đăng ký
+                </Link>
+              </>
             )}
 
             {/* Mobile Menu Toggle */}
@@ -304,7 +315,28 @@ const Header = () => {
             </div>
             <div className="p-4 space-y-4 overflow-y-auto h-[calc(100vh-80px)]">
             
-            {/* Mobile Actions */}
+            {/* 1. Mobile Actions for GUEST */}
+            {!user && (
+               <div className="flex flex-col gap-3 mb-6">
+                  <Link 
+                    to="/register" 
+                    onClick={closeMenu}
+                    className="w-full py-3 bg-emerald-600 text-white rounded-xl font-bold text-center shadow-md"
+                  >
+                    Đăng ký ngay
+                  </Link>
+                  <Link 
+                    to="/login" 
+                    onClick={closeMenu}
+                    className="w-full py-3 bg-gray-50 text-gray-700 rounded-xl font-bold text-center border border-gray-100"
+                  >
+                    Đăng nhập
+                  </Link>
+               </div>
+            )}
+
+            {/* 2. Mobile Actions for USER */}
+            
                 {/* Farmer Mobile Actions */}
                 {profile?.role === "farmer" && (
                     <Link
@@ -333,7 +365,7 @@ const Header = () => {
                 </Link>
               )}
                 
-              {/* Buyer Mobile Menu */}
+              {/* Buyer Mobile Menu (Only when logged in) */}
                {profile?.role === "buyer" && (
                 <>
                    <Link
@@ -344,6 +376,7 @@ const Header = () => {
                       <Store size={22} className="text-emerald-600" />
                       Chợ Nông Sản
                    </Link>
+                   
                    <Link
                       to="/buyer/orders"
                       onClick={closeMenu}
@@ -417,3 +450,4 @@ const Header = () => {
 }
 
 export default Header
+
