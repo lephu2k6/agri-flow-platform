@@ -21,15 +21,17 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
- 
+
   if (allowedRoles.length > 0) {
 
-    if (!profile) return null; 
+    if (!profile) return null;
 
 
     if (!allowedRoles.includes(profile.role)) {
-   
-      const redirectPath = profile.role === 'farmer' ? '/farmer/dashboard' : '/products';
+      let redirectPath = '/products';
+      if (profile.role === 'farmer') redirectPath = '/farmer/dashboard';
+      if (profile.role === 'admin') redirectPath = '/admin/dashboard';
+
       return <Navigate to={redirectPath} replace />;
     }
   }
