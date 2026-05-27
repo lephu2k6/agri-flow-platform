@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import {
   Search, Grid, List, Filter, RotateCcw, PackageSearch,
   TrendingUp, Star, ChevronDown, SlidersHorizontal, ShieldCheck,
@@ -22,6 +23,7 @@ const normalizeProducts = (products) => {
 }
 
 const Products = () => {
+  const [searchParams] = useSearchParams()
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -29,7 +31,7 @@ const Products = () => {
   const [showSortMenu, setShowSortMenu] = useState(false)
 
   const [filters, setFilters] = useState({
-    category_id: '',
+    category_id: searchParams.get('category') || '',
     province: '',
     minPrice: '',
     maxPrice: '',

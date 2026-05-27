@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { 
   ArrowRight, Truck, ShieldCheck, Leaf, 
   TrendingUp, TrendingDown, ChevronDown, 
   Star, ShoppingCart, MapPin, Search, ChevronRight,
-  Zap, Users, BarChart3, Phone, Mail, Clock
+  Zap, Users, BarChart3, Phone, Mail, Clock, Package
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
@@ -34,19 +34,11 @@ const marketPrices = [
   { id: 4, name: "Thanh long ruột đỏ", price: 32000, unit: "kg", region: "Bình Thuận", change: 0.8, isUp: true },
 ];
 
-// Category data
-const categories = [
-  { name: "Trái cây", icon: "🍎", count: 120 },
-  { name: "Rau củ", icon: "🥬", count: 85 },
-  { name: "Ngũ cốc", icon: "🌾", count: 45 },
-  { name: "Thủy sản", icon: "🐟", count: 32 },
-  { name: "Gia vị", icon: "🌶️", count: 28 },
-  { name: "Đặc sản", icon: "🍯", count: 56 },
-];
-
 export default function Home() {
   const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [liveCategories, setLiveCategories] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
+  const [loadingCategories, setLoadingCategories] = useState(true);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [activeFaq, setActiveFaq] = useState(null);
 
@@ -56,6 +48,38 @@ export default function Home() {
       setCurrentSlide(prev => (prev + 1) % bannerSlides.length);
     }, 5000);
     return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    async function fetchCategories() {
+      try {
+        setLoadingCategories(true);
+        const [categoryRes, productRes] = await Promise.all([
+          supabase.from('categories').select('id, name, icon').order('name'),
+          supabase.from('products').select('category_id').eq('status', 'available')
+        ]);
+
+        if (categoryRes.error) throw categoryRes.error;
+        if (productRes.error) throw productRes.error;
+
+        const productCountByCategory = (productRes.data || []).reduce((acc, product) => {
+          if (product.category_id) acc[product.category_id] = (acc[product.category_id] || 0) + 1;
+          return acc;
+        }, {});
+
+        setLiveCategories((categoryRes.data || []).map(category => ({
+          ...category,
+          productCount: productCountByCategory[category.id] || 0
+        })));
+      } catch (err) {
+        console.error("Error fetching categories:", err);
+        setLiveCategories([]);
+      } finally {
+        setLoadingCategories(false);
+      }
+    }
+
+    fetchCategories();
   }, []);
 
   // Fetch products
@@ -164,7 +188,7 @@ export default function Home() {
       </section>
 
       {/* === CATEGORY GRID === */}
-      <section className="py-10 bg-white">
+      <section className="py-8 bg-white border-y border-gray-100">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
@@ -175,12 +199,14 @@ export default function Home() {
               Xem tất cả <ChevronRight size={16} />
             </Link>
           </div>
-          <div className="grid grid-cols-3 sm:grid-cols-6 gap-4">
-            {categories.map((cat, i) => (
-              <Link to="/products" key={i} className="group flex flex-col items-center p-4 bg-gray-50 hover:bg-emerald-50 rounded-xl border border-gray-100 hover:border-emerald-200 transition-all">
-                <span className="text-3xl mb-2">{cat.icon}</span>
-                <span className="text-sm font-semibold text-gray-700 group-hover:text-emerald-700">{cat.name}</span>
-                <span className="text-xs text-gray-400">{cat.count} sản phẩm</span>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            {loadingCategories ? [...Array(6)].map((_, i) => (
+              <div key={i} className="h-28 animate-pulse rounded-md border border-gray-100 bg-gray-50" />
+            )) : liveCategories.map((cat) => (
+              <Link to={`/products?category=${cat.id}`} key={cat.id} className="group rounded-md border border-gray-200 bg-white p-4 transition-all hover:border-emerald-300 hover:bg-emerald-50/40 hover:shadow-sm">
+                <span className="mb-4 flex h-10 w-10 items-center justify-center rounded-md bg-emerald-50 text-emerald-700 group-hover:bg-emerald-600 group-hover:text-white"><Package size={20} /></span>
+                <span className="line-clamp-1 text-sm font-black text-gray-900 group-hover:text-emerald-800">{cat.name}</span>
+                <span className="mt-1 block text-xs font-semibold text-gray-500">{cat.productCount} sản phẩm đang bán</span>
               </Link>
             ))}
           </div>
