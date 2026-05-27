@@ -1,28 +1,32 @@
-import { Filter, X, RotateCcw } from 'lucide-react'
+import { Filter, RotateCcw, SlidersHorizontal } from 'lucide-react'
 import React from 'react'
 
 const ProductFilterSidebar = ({
   filters,
   onFilterChange,
   provinces = [],
-  categories = [], // Mảng các object {id, name}
+  categories = [],
   onApply,
   onClear,
 }) => {
-  // Kiểm tra xem có bộ lọc nào đang hoạt động không để hiện nút Xóa nhanh
   const isFilterActive = filters.category_id || filters.province || filters.minPrice || filters.maxPrice
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 sticky top-24">
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-          <Filter className="mr-2 text-green-600" size={20} />
-          Bộ lọc
-        </h3>
+    <div className="market-panel sticky top-28 overflow-hidden">
+      <div className="flex items-center justify-between border-b border-gray-100 px-4 py-4">
+        <div className="flex items-center gap-2">
+          <div className="flex h-9 w-9 items-center justify-center rounded-md bg-emerald-50 text-emerald-600">
+            <SlidersHorizontal size={18} />
+          </div>
+          <div>
+            <h3 className="font-black text-gray-900">Bộ lọc</h3>
+            <p className="text-xs font-semibold text-gray-500">Thu hẹp kết quả</p>
+          </div>
+        </div>
         {isFilterActive && (
           <button
             onClick={onClear}
-            className="p-1.5 bg-red-50 text-red-600 rounded-full hover:bg-red-100 transition-colors"
+            className="rounded-md p-2 text-gray-400 hover:bg-gray-100 hover:text-emerald-600"
             title="Xóa tất cả"
           >
             <RotateCcw size={16} />
@@ -30,77 +34,61 @@ const ProductFilterSidebar = ({
         )}
       </div>
 
-      <div className="space-y-6">
-        {/* Category Filter - ĐÃ FIX LỖI KEY & RENDER OBJECT */}
-        <div>
-          <h4 className="font-medium text-gray-700 mb-3 text-sm">Danh mục sản phẩm</h4>
+      <div className="space-y-5 p-4">
+        <FilterGroup title="Danh mục sản phẩm">
           <select
             value={filters.category_id || ''}
             onChange={(e) => onFilterChange('category_id', e.target.value)}
-            className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 outline-none text-sm"
+            className="market-input h-10 w-full px-3 text-sm"
           >
             <option value="">Tất cả danh mục</option>
             {categories.map((cat) => (
-              <option key={cat.id} value={cat.id}>
-                {cat.name} {/* Fix: Render name thay vì render cả object */}
-              </option>
+              <option key={cat.id} value={cat.id}>{cat.name}</option>
             ))}
           </select>
-        </div>
+        </FilterGroup>
 
-        {/* Province Filter */}
-        <div>
-          <h4 className="font-medium text-gray-700 mb-3 text-sm">Khu vực</h4>
+        <FilterGroup title="Khu vực">
           <select
             value={filters.province || ''}
             onChange={(e) => onFilterChange('province', e.target.value)}
-            className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 outline-none text-sm"
+            className="market-input h-10 w-full px-3 text-sm"
           >
             <option value="">Tất cả tỉnh thành</option>
             {provinces.map((prov, idx) => (
-              <option key={idx} value={prov}>
-                {prov}
-              </option>
+              <option key={idx} value={prov}>{prov}</option>
             ))}
           </select>
-        </div>
+        </FilterGroup>
 
-        {/* Price Range */}
-        <div>
-          <h4 className="font-medium text-gray-700 mb-3 text-sm">Khoảng giá (VND)</h4>
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center gap-2">
-              <input
-                type="number"
-                placeholder="Từ"
-                value={filters.minPrice || ''}
-                onChange={(e) => onFilterChange('minPrice', e.target.value)}
-                className="w-full p-2 text-sm border border-gray-200 rounded-lg outline-none focus:border-green-500"
-              />
-              <span className="text-gray-400">-</span>
-              <input
-                type="number"
-                placeholder="Đến"
-                value={filters.maxPrice || ''}
-                onChange={(e) => onFilterChange('maxPrice', e.target.value)}
-                className="w-full p-2 text-sm border border-gray-200 rounded-lg outline-none focus:border-green-500"
-              />
-            </div>
+        <FilterGroup title="Khoảng giá (VND)">
+          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+            <input
+              type="number"
+              placeholder="Từ"
+              value={filters.minPrice || ''}
+              onChange={(e) => onFilterChange('minPrice', e.target.value)}
+              className="market-input h-10 min-w-0 px-3 text-sm"
+            />
+            <span className="text-gray-300">-</span>
+            <input
+              type="number"
+              placeholder="Đến"
+              value={filters.maxPrice || ''}
+              onChange={(e) => onFilterChange('maxPrice', e.target.value)}
+              className="market-input h-10 min-w-0 px-3 text-sm"
+            />
           </div>
-        </div>
+        </FilterGroup>
 
-        {/* Action Buttons */}
-        <div className="pt-4 border-t space-y-3">
-          <button
-            onClick={onApply}
-            className="w-full py-2.5 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 shadow-sm transition-all"
-          >
-            Áp dụng
+        <div className="border-t border-gray-100 pt-4">
+          <button onClick={onApply} className="market-button h-10 w-full text-sm">
+            <Filter size={16} /> Áp dụng
           </button>
           {isFilterActive && (
             <button
               onClick={onClear}
-              className="w-full py-2 text-gray-500 text-sm hover:text-gray-700 transition-colors"
+              className="mt-2 h-9 w-full rounded-md text-sm font-bold text-gray-500 hover:bg-gray-50 hover:text-emerald-700"
             >
               Thiết lập lại
             </button>
@@ -110,5 +98,12 @@ const ProductFilterSidebar = ({
     </div>
   )
 }
+
+const FilterGroup = ({ title, children }) => (
+  <div>
+    <h4 className="mb-2 text-xs font-black uppercase tracking-wide text-gray-500">{title}</h4>
+    {children}
+  </div>
+)
 
 export default ProductFilterSidebar

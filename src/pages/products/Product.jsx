@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import {
-  Search, Grid, List, Filter,
-  RotateCcw, PackageSearch, MapPin, Leaf, TrendingUp,
-  Truck, Star, ChevronDown
+  Search, Grid, List, Filter, RotateCcw, PackageSearch,
+  TrendingUp, Star, ChevronDown, SlidersHorizontal, ShieldCheck,
+  Truck, Users
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -10,7 +10,6 @@ import { supabase } from '../../lib/supabase'
 import ProductCard from '../../components/products/ProductCard'
 import ProductFilterSidebar from '../../components/products/ProductFilterSidebar'
 
-/* ================= HELPER: Chuẩn hóa dữ liệu ảnh ================= */
 const normalizeProducts = (products) => {
   return products.map(p => ({
     ...p,
@@ -28,7 +27,7 @@ const Products = () => {
   const [search, setSearch] = useState('')
   const [viewMode, setViewMode] = useState('grid')
   const [showSortMenu, setShowSortMenu] = useState(false)
-  
+
   const [filters, setFilters] = useState({
     category_id: '',
     province: '',
@@ -50,12 +49,11 @@ const Products = () => {
 
   const sortOptions = [
     { value: 'newest', label: 'Mới nhất', icon: TrendingUp },
-    { value: 'price_low', label: 'Giá thấp → cao', icon: TrendingUp },
-    { value: 'price_high', label: 'Giá cao → thấp', icon: TrendingUp },
+    { value: 'price_low', label: 'Giá thấp đến cao', icon: TrendingUp },
+    { value: 'price_high', label: 'Giá cao đến thấp', icon: TrendingUp },
     { value: 'popular', label: 'Phổ biến nhất', icon: Star }
   ]
 
-  /* ================= FETCH DATA ================= */
   useEffect(() => {
     fetchMetadata()
     fetchProducts()
@@ -79,7 +77,7 @@ const Products = () => {
 
       setMetadata({
         categories: catRes.data || [],
-        provinces: [...new Set(provRes.data?.map(p => p.province))]
+        provinces: [...new Set(provRes.data?.map(p => p.province).filter(Boolean))]
       })
     } catch (err) {
       console.error('Metadata error:', err)
@@ -95,11 +93,9 @@ const Products = () => {
 
       if (data) {
         const prices = data.map(p => p.price_per_unit).filter(Boolean)
-        const avgPrice = prices.length ? 
-          Math.round(prices.reduce((a, b) => a + b, 0) / prices.length) : 0
-        
+        const avgPrice = prices.length ? Math.round(prices.reduce((a, b) => a + b, 0) / prices.length) : 0
         const uniqueFarmers = [...new Set(data.map(p => p.farmer_id))]
-        
+
         setStats({
           totalProducts: data.length,
           avgPrice,
@@ -169,173 +165,119 @@ const Products = () => {
     setSearch('')
   }
 
+  const hasFilters = filters.category_id || filters.province || filters.minPrice || filters.maxPrice || search
+  const activeCategory = metadata.categories.find(c => c.id === filters.category_id)
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-emerald-50/30 to-white pb-20">
-      {/* Hero Header */}
-      <div className="relative bg-gradient-to-r from-emerald-600 to-emerald-700 text-white overflow-hidden">
-        <div className="absolute inset-0 bg-grid-white/10"></div>
-        <div className="relative max-w-7xl mx-auto px-4 py-12">
-          <div className="text-center mb-8">
-            <h1 className="text-4xl md:text-5xl font-black mb-4">
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-emerald-100">
-                Chợ Nông Sản AgriFlow
-              </span>
-            </h1>
-            <p className="text-lg text-emerald-100 max-w-2xl mx-auto">
-              Kết nối trực tiếp với nông dân, mua nông sản tươi ngon với giá tốt nhất
-            </p>
+    <div className="market-surface min-h-screen pb-12">
+      <section className="border-b border-gray-200 bg-white">
+        <div className="mx-auto max-w-7xl px-4 py-6">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wide text-emerald-600">
+                <ShieldCheck size={15} />
+                Chợ nông sản trực tiếp
+              </div>
+              <h1 className="market-heading mt-2 text-3xl">Chợ Nông Sản AgriFlow</h1>
+              <p className="mt-2 max-w-2xl text-sm text-gray-500">
+                Tìm nguồn hàng nông sản từ nông dân và hộ sản xuất, có thông tin giá, tồn kho và khu vực rõ ràng.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3 lg:w-[420px]">
+              <StatBox label="Sản phẩm" value={stats.totalProducts} />
+              <StatBox label="Người bán" value={stats.activeFarmers} />
+              <StatBox label="Giá TB" value={`${stats.avgPrice.toLocaleString()}đ`} />
+            </div>
           </div>
 
-          {/* Search Bar */}
-          <div className="max-w-3xl mx-auto">
-            <div className="relative group">
-              <div className="absolute -inset-1 bg-gradient-to-r from-emerald-400 to-sky-400 rounded-2xl blur opacity-25 group-hover:opacity-40 transition duration-500"></div>
-              <div className="relative bg-white rounded-xl shadow-2xl">
-                <div className="flex flex-col md:flex-row gap-2 p-2">
-                  <div className="flex-1 relative">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-500" size={20} />
-                    <input 
-                      type="text"
-                      placeholder="Tìm kiếm sản phẩm, nông dân, địa phương..."
-                      value={search}
-                      onChange={(e) => setSearch(e.target.value)}
-                      className="w-full pl-12 pr-4 py-3.5 bg-white border-none rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-gray-800 placeholder-gray-400"
-                    />
-                  </div>
-                  <button 
-                    onClick={fetchProducts}
-                    className="px-8 py-3.5 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-lg font-bold hover:from-emerald-600 hover:to-emerald-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-                  >
-                    Tìm kiếm
-                  </button>
-                </div>
-              </div>
+          <div className="mt-5 grid gap-3 lg:grid-cols-[1fr_auto]">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+              <input
+                type="text"
+                placeholder="Tìm sản phẩm, người bán, địa phương..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="market-input h-11 w-full pl-10 pr-4 text-sm"
+              />
             </div>
+            <button onClick={fetchProducts} className="market-button h-11 px-5 text-sm">
+              <Search size={17} /> Tìm kiếm
+            </button>
+          </div>
 
-            {/* Quick Stats */}
-            <div className="grid grid-cols-3 gap-4 mt-6">
-              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 text-center">
-                <div className="text-2xl font-bold text-white">{stats.totalProducts}</div>
-                <div className="text-sm text-emerald-100">Sản phẩm</div>
-              </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 text-center">
-                <div className="text-2xl font-bold text-white">{stats.activeFarmers}</div>
-                <div className="text-sm text-emerald-100">Nông dân</div>
-              </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 text-center">
-                <div className="text-2xl font-bold text-white">
-                  {stats.avgPrice.toLocaleString()}₫
-                </div>
-                <div className="text-sm text-emerald-100">Giá trung bình</div>
-              </div>
-            </div>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {metadata.categories.slice(0, 8).map((category) => (
+              <button
+                key={category.id}
+                onClick={() => setFilters(prev => ({ ...prev, category_id: prev.category_id === category.id ? '' : category.id }))}
+                className={`rounded-full border px-3 py-1.5 text-xs font-bold ${
+                  filters.category_id === category.id
+                    ? 'border-emerald-600 bg-emerald-50 text-emerald-700'
+                    : 'border-gray-200 bg-white text-gray-600 hover:border-emerald-200 hover:text-emerald-700'
+                }`}
+              >
+                {category.name}
+              </button>
+            ))}
           </div>
         </div>
-      </div>
+      </section>
 
-      <div className="max-w-7xl mx-auto px-4 py-8 -mt-8 relative">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <div className="bg-white rounded-xl shadow-lg p-4 border border-emerald-100">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
-                <Truck className="h-5 w-5 text-emerald-600" />
-              </div>
-              <div>
-                <div className="text-sm text-gray-500">Vận chuyển tối ưu</div>
-                <div className="font-bold text-gray-800">Giảm 15-20% chi phí</div>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-xl shadow-lg p-4 border border-sky-100">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-sky-100 flex items-center justify-center">
-                <Leaf className="h-5 w-5 text-sky-600" />
-              </div>
-              <div>
-                <div className="text-sm text-gray-500">Nông sản tươi</div>
-                <div className="font-bold text-gray-800">Thu hoạch hàng ngày</div>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-xl shadow-lg p-4 border border-amber-100">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
-                <MapPin className="h-5 w-5 text-amber-600" />
-              </div>
-              <div>
-                <div className="text-sm text-gray-500">Khu vực phục vụ</div>
-                <div className="font-bold text-gray-800">Miền Trung - Nam</div>
-              </div>
-            </div>
-          </div>
+      <div className="mx-auto max-w-7xl px-4 py-6">
+        <div className="mb-5 grid grid-cols-1 gap-3 md:grid-cols-3">
+          <FeatureBox icon={Truck} title="Vận chuyển tối ưu" text="Hỗ trợ gợi ý logistics theo khu vực" />
+          <FeatureBox icon={ShieldCheck} title="Nguồn hàng minh bạch" text="Hiển thị người bán, tồn kho, địa phương" />
+          <FeatureBox icon={Users} title="Mua trực tiếp" text="Kết nối buyer với nông dân và hộ sản xuất" />
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Filter Sidebar */}
-          <aside className="lg:w-1/4">
-            <div className="sticky top-24">
-              <div className="bg-white rounded-2xl shadow-lg border border-emerald-100 overflow-hidden">
-                <div className="p-6 border-b border-emerald-50">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
-                      <Filter className="h-5 w-5 text-emerald-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-gray-800">Bộ lọc</h3>
-                      <p className="text-sm text-gray-500">Tìm sản phẩm phù hợp</p>
-                    </div>
-                  </div>
-                </div>
-                <ProductFilterSidebar
-                  filters={filters}
-                  onFilterChange={(k, v) => setFilters(p => ({ ...p, [k]: v }))}
-                  provinces={metadata.provinces}
-                  categories={metadata.categories}
-                  onApply={fetchProducts}
-                  onClear={clearFilters}
-                />
-              </div>
-            </div>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_1fr]">
+          <aside>
+            <ProductFilterSidebar
+              filters={filters}
+              onFilterChange={(k, v) => setFilters(p => ({ ...p, [k]: v }))}
+              provinces={metadata.provinces}
+              categories={metadata.categories}
+              onApply={fetchProducts}
+              onClear={clearFilters}
+            />
           </aside>
 
-          {/* Main Content */}
-          <main className="lg:w-3/4">
-            {/* Controls Bar */}
-            <div className="bg-white rounded-2xl shadow-lg border border-emerald-100 p-4 mb-6">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="flex items-center gap-2">
-                  <div className="text-sm font-medium text-gray-600">
-                    Hiển thị <span className="font-bold text-emerald-600">{products.length}</span> sản phẩm
+          <main className="min-w-0">
+            <div className="market-panel mb-5 p-4">
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <p className="text-sm font-bold text-gray-900">
+                    Hiển thị <span className="text-emerald-600">{products.length}</span> sản phẩm
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {activeCategory && <FilterTag label={activeCategory.name} />}
+                    {filters.province && <FilterTag label={filters.province} />}
+                    {search && <FilterTag label={`"${search}"`} />}
+                    {hasFilters && (
+                      <button onClick={clearFilters} className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 text-[11px] font-bold text-gray-500 hover:text-emerald-700">
+                        <RotateCcw size={12} /> Xóa lọc
+                      </button>
+                    )}
                   </div>
-                  {filters.category_id && (
-                    <span className="px-2 py-1 bg-emerald-100 text-emerald-700 text-xs font-medium rounded-full">
-                      {metadata.categories.find(c => c.id === filters.category_id)?.name}
-                    </span>
-                  )}
-                  {filters.province && (
-                    <span className="px-2 py-1 bg-sky-100 text-sky-700 text-xs font-medium rounded-full">
-                      {filters.province}
-                    </span>
-                  )}
                 </div>
 
-                <div className="flex items-center gap-4">
-                  {/* Sort Dropdown */}
+                <div className="flex items-center gap-2">
                   <div className="relative">
                     <button
                       onClick={() => setShowSortMenu(!showSortMenu)}
-                      className="flex items-center gap-2 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl hover:bg-gray-100 transition-colors text-sm font-medium text-gray-700"
+                      className="inline-flex h-9 items-center gap-2 rounded-md border border-gray-200 bg-white px-3 text-sm font-bold text-gray-600 hover:bg-gray-50"
                     >
-                      <TrendingUp size={16} />
+                      <TrendingUp size={15} />
                       {sortOptions.find(o => o.value === filters.sortBy)?.label || 'Sắp xếp'}
-                      <ChevronDown size={16} className={`transition-transform ${showSortMenu ? 'rotate-180' : ''}`} />
+                      <ChevronDown size={15} className={showSortMenu ? 'rotate-180' : ''} />
                     </button>
-                    
+
                     {showSortMenu && (
                       <>
-                        <div className="fixed inset-0 z-40" onClick={() => setShowSortMenu(false)}></div>
-                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-2xl border border-gray-100 z-50 py-2">
+                        <div className="fixed inset-0 z-40" onClick={() => setShowSortMenu(false)} />
+                        <div className="absolute right-0 z-50 mt-2 w-52 rounded-md border border-gray-200 bg-white py-1 shadow-lg">
                           {sortOptions.map((option) => {
                             const Icon = option.icon
                             return (
@@ -345,13 +287,11 @@ const Products = () => {
                                   setFilters(p => ({ ...p, sortBy: option.value }))
                                   setShowSortMenu(false)
                                 }}
-                                className={`w-full px-4 py-2.5 text-left flex items-center gap-3 hover:bg-emerald-50 transition-colors ${
-                                  filters.sortBy === option.value 
-                                    ? 'text-emerald-600 font-semibold bg-emerald-50' 
-                                    : 'text-gray-700'
+                                className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-semibold hover:bg-emerald-50 ${
+                                  filters.sortBy === option.value ? 'text-emerald-700' : 'text-gray-600'
                                 }`}
                               >
-                                <Icon size={16} />
+                                <Icon size={15} />
                                 {option.label}
                               </button>
                             )
@@ -361,98 +301,50 @@ const Products = () => {
                     )}
                   </div>
 
-                  {/* View Mode Toggle */}
-                  <div className="flex items-center border border-gray-200 rounded-xl overflow-hidden bg-white">
+                  <div className="flex overflow-hidden rounded-md border border-gray-200 bg-white">
                     <button
                       onClick={() => setViewMode('grid')}
-                      className={`p-2.5 transition-all ${
-                        viewMode === 'grid' 
-                          ? 'bg-emerald-500 text-white' 
-                          : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
-                      }`}
+                      className={`p-2 ${viewMode === 'grid' ? 'bg-emerald-600 text-white' : 'text-gray-400 hover:bg-gray-50'}`}
+                      title="Dạng lưới"
                     >
-                      <Grid size={18} />
+                      <Grid size={17} />
                     </button>
                     <button
                       onClick={() => setViewMode('list')}
-                      className={`p-2.5 transition-all ${
-                        viewMode === 'list' 
-                          ? 'bg-emerald-500 text-white' 
-                          : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
-                      }`}
+                      className={`p-2 ${viewMode === 'list' ? 'bg-emerald-600 text-white' : 'text-gray-400 hover:bg-gray-50'}`}
+                      title="Dạng danh sách"
                     >
-                      <List size={18} />
+                      <List size={17} />
                     </button>
                   </div>
-
-                  {/* Clear Filters Button */}
-                  {(filters.category_id || filters.province || filters.minPrice || filters.maxPrice) && (
-                    <button
-                      onClick={clearFilters}
-                      className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-colors"
-                    >
-                      <RotateCcw size={16} />
-                      Đặt lại
-                    </button>
-                  )}
                 </div>
               </div>
             </div>
 
-            {/* Products Grid/List */}
             {loading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {[...Array(6)].map((_, i) => (
-                  <div key={i} className="bg-white rounded-2xl shadow-lg border border-emerald-100 overflow-hidden animate-pulse">
-                    <div className="h-48 bg-gradient-to-r from-emerald-100 to-emerald-50"></div>
-                    <div className="p-4 space-y-3">
-                      <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                      <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                      <div className="h-6 bg-gray-300 rounded w-1/4"></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <ProductSkeleton viewMode={viewMode} />
             ) : products.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl shadow-lg border border-dashed border-emerald-200">
-                <div className="relative mb-6">
-                  <div className="w-24 h-24 rounded-full bg-gradient-to-br from-emerald-100 to-sky-100 flex items-center justify-center">
-                    <PackageSearch size={40} className="text-emerald-400" />
-                  </div>
-                  <div className="absolute -top-2 -right-2 w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
-                    <Leaf size={16} className="text-amber-600" />
-                  </div>
-                </div>
-                <h3 className="text-xl font-bold text-gray-800 mb-2">Không tìm thấy sản phẩm nào</h3>
-                <p className="text-gray-500 text-center max-w-md mb-6">
-                  Thử thay đổi bộ lọc, từ khóa tìm kiếm hoặc khám phá các sản phẩm khác
-                </p>
-                <button 
-                  onClick={clearFilters}
-                  className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl font-bold hover:from-emerald-600 hover:to-emerald-700 transition-all flex items-center gap-2 shadow-lg hover:shadow-xl"
-                >
-                  <RotateCcw size={16} />
-                  Xem tất cả sản phẩm
+              <div className="market-panel flex flex-col items-center justify-center py-16 text-center">
+                <PackageSearch size={42} className="mb-4 text-gray-300" />
+                <h3 className="text-lg font-black text-gray-800">Không tìm thấy sản phẩm</h3>
+                <p className="mt-2 max-w-md text-sm text-gray-500">Thử thay đổi từ khóa, bộ lọc hoặc khoảng giá để mở rộng kết quả.</p>
+                <button onClick={clearFilters} className="market-button mt-5 h-10 px-4 text-sm">
+                  <RotateCcw size={16} /> Xem tất cả sản phẩm
                 </button>
               </div>
             ) : viewMode === 'grid' ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {products.map(p => (
-                  <ProductCard key={p.id} product={p} />
-                ))}
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {products.map(p => <ProductCard key={p.id} product={p} />)}
               </div>
             ) : (
               <div className="space-y-4">
-                {products.map(p => (
-                  <ProductCard key={p.id} product={p} viewMode="list" />
-                ))}
+                {products.map(p => <ProductCard key={p.id} product={p} viewMode="list" />)}
               </div>
             )}
 
-            {/* Load More Button */}
             {products.length > 0 && !loading && (
-              <div className="text-center mt-12">
-                <button className="px-8 py-3.5 border-2 border-emerald-500 text-emerald-600 rounded-xl font-bold hover:bg-emerald-50 transition-all hover:scale-105 active:scale-95">
+              <div className="mt-8 text-center">
+                <button className="rounded-md border border-emerald-600 bg-white px-5 py-2.5 text-sm font-black text-emerald-700 hover:bg-emerald-50">
                   Xem thêm sản phẩm
                 </button>
               </div>
@@ -460,11 +352,49 @@ const Products = () => {
           </main>
         </div>
       </div>
+    </div>
+  )
+}
 
-      {/* Floating Action Button */}
-      <button className="fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-full shadow-2xl flex items-center justify-center hover:shadow-3xl hover:scale-110 transition-all">
-        <Filter size={24} />
-      </button>
+const StatBox = ({ label, value }) => (
+  <div className="rounded-md border border-gray-100 bg-gray-50 px-3 py-2">
+    <p className="text-lg font-black text-gray-900">{value}</p>
+    <p className="text-[11px] font-bold uppercase tracking-wide text-gray-400">{label}</p>
+  </div>
+)
+
+const FeatureBox = ({ icon: Icon, title, text }) => (
+  <div className="market-panel flex items-center gap-3 p-4">
+    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-emerald-50 text-emerald-600">
+      <Icon size={20} />
+    </div>
+    <div>
+      <p className="font-black text-gray-900">{title}</p>
+      <p className="text-xs font-semibold text-gray-500">{text}</p>
+    </div>
+  </div>
+)
+
+const FilterTag = ({ label }) => (
+  <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700">
+    {label}
+  </span>
+)
+
+const ProductSkeleton = ({ viewMode }) => {
+  const count = viewMode === 'grid' ? 6 : 4
+  return (
+    <div className={viewMode === 'grid' ? 'grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3' : 'space-y-4'}>
+      {[...Array(count)].map((_, i) => (
+        <div key={i} className="market-panel animate-pulse overflow-hidden">
+          <div className={viewMode === 'grid' ? 'h-48 bg-gray-100' : 'h-40 bg-gray-100'} />
+          <div className="space-y-3 p-4">
+            <div className="h-4 w-3/4 rounded bg-gray-100" />
+            <div className="h-4 w-1/2 rounded bg-gray-100" />
+            <div className="h-7 w-24 rounded bg-gray-100" />
+          </div>
+        </div>
+      ))}
     </div>
   )
 }

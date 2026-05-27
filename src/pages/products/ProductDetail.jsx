@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react'
-import React from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import React, { useEffect, useState } from 'react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
-  ShoppingCart, MapPin, Package, User, MessageCircle, Truck, Shield, Clock, Leaf, ChevronLeft, Star, CheckCircle, Heart
+  ChevronLeft, Clock, Heart, Leaf, MapPin, MessageCircle,
+  Package, Shield, ShoppingCart, Star, Truck, User
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -38,35 +38,27 @@ const PublicProductDetail = () => {
     }
   }, [id])
 
+  useEffect(() => {
+    if (product?.profiles?.id) fetchFarmerStats()
+  }, [product?.profiles?.id])
+
+  useEffect(() => {
+    if (product?.id && user?.id) checkWishlist()
+  }, [product?.id, user?.id])
+
   const fetchReviews = async () => {
     try {
       const result = await reviewService.getProductReviews(id)
-      if (result.success) {
-        setReviews(result.data)
-      }
+      if (result.success) setReviews(result.data)
     } catch (error) {
       console.error('Fetch reviews error:', error)
     }
   }
 
-  useEffect(() => {
-    if (product?.profiles?.id) {
-      fetchFarmerStats()
-    }
-  }, [product?.profiles?.id])
-
-  useEffect(() => {
-    if (product?.id && user?.id) {
-      checkWishlist()
-    }
-  }, [product?.id, user?.id])
-
   const checkWishlist = async () => {
     if (!user || !product?.id) return
     const result = await wishlistService.isInWishlist(product.id, user.id)
-    if (result.success) {
-      setIsInWishlist(result.isInWishlist)
-    }
+    if (result.success) setIsInWishlist(result.isInWishlist)
   }
 
   const handleWishlistToggle = async () => {
@@ -101,21 +93,20 @@ const PublicProductDetail = () => {
   const fetchProductDetails = async () => {
     try {
       setLoading(true)
-
       const { data, error } = await supabase
         .from('products')
         .select(`
           *,
           profiles:farmer_id (
-            id, 
-            full_name, 
+            id,
+            full_name,
             province,
             avatar_url,
             phone
           ),
           product_images (
-            id, 
-            image_url, 
+            id,
+            image_url,
             is_primary
           ),
           categories:category_id (
@@ -127,10 +118,8 @@ const PublicProductDetail = () => {
         .single()
 
       if (error) throw error
-
       setProduct(data)
       setSelectedQuantity(data.min_order_quantity || 1)
-
     } catch (error) {
       console.error('Fetch error:', error.message)
       toast.error('Không thể tải sản phẩm')
@@ -148,58 +137,21 @@ const PublicProductDetail = () => {
         .eq('farmer_id', product.profiles.id)
         .eq('status', 'available')
 
-      setFarmerStats({
-        activeProducts: data?.length || 0
-      })
+      setFarmerStats({ activeProducts: data?.length || 0 })
     } catch (error) {
       console.error('Failed to fetch farmer stats:', error)
     }
   }
 
-  const formatCurrency = (amount) => new Intl.NumberFormat('vi-VN').format(amount)
-
-  const calculateTotal = () => {
-    return selectedQuantity * product.price_per_unit
-  }
-
-  const getHarvestBadge = () => {
-    if (!product.harvest_date) return null
-
-    const harvestDate = new Date(product.harvest_date)
-    const now = new Date()
-    const diffDays = Math.floor((harvestDate - now) / (1000 * 60 * 60 * 24))
-
-    if (diffDays <= 3 && diffDays >= 0) {
-      return (
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-full">
-          <Clock size={14} className="text-emerald-600" />
-          <span className="text-sm font-semibold text-emerald-700">Thu hoạch trong {diffDays} ngày</span>
-        </div>
-      )
-    }
-    return null
-  }
+  const formatCurrency = (amount) => new Intl.NumberFormat('vi-VN').format(amount || 0)
+  const calculateTotal = () => selectedQuantity * product.price_per_unit
 
   if (loading) return (
-    <div className="min-h-screen bg-gradient-to-b from-emerald-50/30 to-white">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Image Gallery Skeleton */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <div className="h-96 bg-gradient-to-r from-emerald-100 to-emerald-50 rounded-xl animate-pulse"></div>
-            </div>
-          </div>
-          {/* Product Info Skeleton */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <div className="space-y-4">
-                <div className="h-8 bg-gray-200 rounded w-3/4 animate-pulse"></div>
-                <div className="h-6 bg-gray-200 rounded w-1/4 animate-pulse"></div>
-                <div className="h-12 bg-gray-200 rounded animate-pulse"></div>
-              </div>
-            </div>
-          </div>
+    <div className="market-surface min-h-screen">
+      <div className="mx-auto max-w-7xl px-4 py-8">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <div className="market-panel h-96 animate-pulse lg:col-span-2" />
+          <div className="market-panel h-96 animate-pulse" />
         </div>
       </div>
     </div>
@@ -208,9 +160,11 @@ const PublicProductDetail = () => {
   if (!product) return null
 
   const sortedImages = product.product_images?.sort((a, b) => (b.is_primary ? 1 : 0) - (a.is_primary ? 1 : 0)) || []
+  const minQty = product.min_order_quantity || 1
+  const rating = product.average_rating > 0 ? Number(product.average_rating).toFixed(1) : '5.0'
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-emerald-50/30 to-white">
+    <div className="market-surface min-h-screen">
       {showOrderForm && (
         <OrderForm
           product={product}
@@ -218,452 +172,225 @@ const PublicProductDetail = () => {
           onClose={() => setShowOrderForm(false)}
           onSuccess={() => {
             setShowOrderForm(false)
-            toast.success('🎉 Gửi yêu cầu mua hàng thành công!')
+            toast.success('Gửi yêu cầu mua hàng thành công')
           }}
         />
       )}
 
-      {/* Breadcrumb */}
-      <div className="bg-white border-b border-emerald-50">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <Link to="/products" className="hover:text-emerald-600 flex items-center gap-1">
-              <ChevronLeft size={16} />
-              Chợ Nông Sản
+      <div className="border-b border-gray-200 bg-white">
+        <div className="mx-auto max-w-7xl px-4 py-4">
+          <div className="flex min-w-0 items-center gap-2 text-sm text-gray-600">
+            <Link to="/products" className="flex items-center gap-1 font-bold hover:text-emerald-600">
+              <ChevronLeft size={16} /> Chợ nông sản
             </Link>
             <span className="text-gray-300">/</span>
-            <Link to={`/products?category=${product.category_id}`} className="hover:text-emerald-600">
-              {product.categories?.name}
-            </Link>
-            <span className="text-gray-300">/</span>
-            <span className="text-gray-800 font-medium truncate">{product.title}</span>
+            <span className="truncate font-semibold text-gray-900">{product.title}</span>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
-          {/* Left Column: Gallery & Description */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Main Gallery */}
-            <div className="bg-white rounded-2xl shadow-lg border border-emerald-100 overflow-hidden">
+      <div className="mx-auto max-w-7xl px-4 py-6">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_380px]">
+          <main className="space-y-6">
+            <section className="market-panel overflow-hidden">
               <ProductImageGallery images={sortedImages} />
-            </div>
+            </section>
 
-            {/* Product Video */}
             {product.video_url && (
-              <ProductVideo videoUrl={product.video_url} title="Video giới thiệu sản phẩm" />
+              <section className="market-panel overflow-hidden p-4">
+                <ProductVideo videoUrl={product.video_url} title="Video giới thiệu sản phẩm" />
+              </section>
             )}
 
-            {/* Product Details */}
-            <div className="bg-white rounded-2xl shadow-lg border border-emerald-100 p-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6 pb-4 border-b border-emerald-100">
-                Thông tin sản phẩm
-              </h2>
-
-              <div className="grid grid-cols-2 gap-6 mb-8">
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center">
-                      <Leaf size={20} className="text-emerald-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Danh mục</p>
-                      <p className="font-semibold text-gray-800">{product.categories?.name}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-sky-50 flex items-center justify-center">
-                      <Package size={20} className="text-sky-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Đơn vị tính</p>
-                      <p className="font-semibold text-gray-800">{product.unit}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center">
-                      <Shield size={20} className="text-amber-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Chất lượng</p>
-                      <p className="font-semibold text-gray-800">
-                        {product.quality_standard || 'Loại A'}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center">
-                      <Truck size={20} className="text-purple-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Vận chuyển</p>
-                      <p className="font-semibold text-emerald-600">Hệ thống gợi ý</p>
-                    </div>
-                  </div>
-                </div>
+            <section className="market-panel p-5">
+              <div className="mb-5 flex items-center justify-between border-b border-gray-100 pb-4">
+                <h2 className="text-lg font-black text-gray-900">Thông tin sản phẩm</h2>
+                <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700">{product.categories?.name || 'Nông sản'}</span>
               </div>
 
-              {/* Description */}
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">Mô tả sản phẩm</h3>
-                <div className="prose prose-emerald max-w-none">
-                  <p className="text-gray-600 leading-relaxed whitespace-pre-line">
-                    {product.description || 'Sản phẩm chất lượng cao, thu hoạch theo tiêu chuẩn an toàn thực phẩm.'}
-                  </p>
-                </div>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <InfoItem icon={Leaf} label="Danh mục" value={product.categories?.name || 'Chưa phân loại'} />
+                <InfoItem icon={Package} label="Đơn vị tính" value={product.unit} />
+                <InfoItem icon={Shield} label="Chất lượng" value={product.quality_standard || 'Loại A'} />
+                <InfoItem icon={Truck} label="Vận chuyển" value="Hệ thống gợi ý" />
               </div>
 
-              {/* Harvest Badge */}
-              {getHarvestBadge() && (
-                <div className="mt-6">
-                  {getHarvestBadge()}
+              <div className="mt-6 border-t border-gray-100 pt-5">
+                <h3 className="mb-3 font-black text-gray-900">Mô tả sản phẩm</h3>
+                <p className="whitespace-pre-line text-sm leading-relaxed text-gray-600">
+                  {product.description || 'Sản phẩm chất lượng cao, thu hoạch theo tiêu chuẩn an toàn thực phẩm.'}
+                </p>
+              </div>
+
+              {product.harvest_date && (
+                <div className="mt-5 inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1.5 text-sm font-bold text-emerald-700">
+                  <Clock size={15} /> Thu hoạch: {new Date(product.harvest_date).toLocaleDateString('vi-VN')}
                 </div>
               )}
-            </div>
+            </section>
 
-            {/* Customer Reviews Section */}
-            <div className="bg-white rounded-2xl shadow-lg border border-emerald-100 p-8">
-              <div className="flex items-center justify-between mb-8 pb-4 border-b border-emerald-50">
-                <h2 className="text-2xl font-bold text-gray-900">Đánh giá từ khách hàng</h2>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-500">Tổng cộng {reviews.length} đánh giá</span>
-                </div>
+            <section className="market-panel p-5">
+              <div className="mb-5 flex items-center justify-between border-b border-gray-100 pb-4">
+                <h2 className="text-lg font-black text-gray-900">Đánh giá từ khách hàng</h2>
+                <span className="text-sm font-semibold text-gray-500">{reviews.length} đánh giá</span>
               </div>
 
               {reviews.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-                  {/* Rating Summary Left */}
-                  <div className="md:col-span-1 space-y-6">
-                    <div className="bg-emerald-50 rounded-[2rem] p-8 text-center border border-emerald-100 shadow-inner">
-                      <div className="text-6xl font-black text-emerald-600 mb-2 italic">
-                        {product.average_rating > 0 ? Number(product.average_rating).toFixed(1) : '5.0'}
-                      </div>
-                      <div className="flex justify-center gap-1 mb-3">
-                        {[1, 2, 3, 4, 5].map((s) => (
-                          <Star
-                            key={s}
-                            size={20}
-                            className={s <= (product.average_rating || 5) ? 'text-amber-400 fill-amber-400' : 'text-gray-200'}
-                          />
-                        ))}
-                      </div>
-                      <p className="text-sm font-bold text-emerald-700 uppercase tracking-widest italic">Điểm tin cậy</p>
-                    </div>
-
-                    <div className="space-y-3 px-2">
-                      {[5, 4, 3, 2, 1].map((s) => {
-                        const count = reviews.filter(r => r.rating === s).length
-                        const percent = reviews.length > 0 ? (count / reviews.length) * 100 : 0
-                        return (
-                          <div key={s} className="flex items-center gap-3">
-                            <span className="text-xs font-bold text-gray-500 w-4">{s}</span>
-                            <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-                              <div
-                                className="h-full bg-amber-400 rounded-full shadow-[0_0_8px_rgba(251,191,36,0.5)]"
-                                style={{ width: `${percent > 0 ? percent : s === 5 ? 100 : 0}%` }}
-                              />
-                            </div>
-                            <span className="text-[10px] font-medium text-gray-400 w-8">{percent > 0 ? `${Math.round(percent)}%` : s === 5 ? '100%' : '0%'}</span>
-                          </div>
-                        )
-                      })}
-                    </div>
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-[220px_1fr]">
+                  <div className="rounded-md bg-emerald-50 p-5 text-center">
+                    <div className="text-4xl font-black text-emerald-600">{rating}</div>
+                    <Stars value={Number(rating)} className="mt-2 justify-center" />
+                    <p className="mt-2 text-xs font-black uppercase tracking-wide text-emerald-700">Điểm tin cậy</p>
                   </div>
-
-                  {/* Reviews List Right */}
-                  <div className="md:col-span-2 space-y-8">
-                    <div className="max-h-[600px] overflow-y-auto pr-4 custom-scrollbar">
-                      <div className="divide-y divide-emerald-50">
-                        {reviews.map((review) => (
-                          <div key={review.id} className="py-6 first:pt-0 last:pb-0">
-                            <div className="flex items-start gap-4">
-                              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-100 to-sky-100 flex items-center justify-center text-emerald-700 font-bold shadow-sm shrink-0 border-2 border-white ring-1 ring-emerald-50">
-                                {review.profiles?.full_name?.charAt(0).toUpperCase() || 'B'}
-                              </div>
-                              <div className="flex-1">
-                                <div className="flex items-center justify-between mb-1">
-                                  <h4 className="font-bold text-gray-800">{review.profiles?.full_name}</h4>
-                                  <span className="text-[10px] text-gray-400 font-medium">
-                                    {new Date(review.created_at).toLocaleDateString('vi-VN')}
-                                  </span>
-                                </div>
-                                <div className="flex gap-1 mb-3">
-                                  {[1, 2, 3, 4, 5].map((s) => (
-                                    <Star
-                                      key={s}
-                                      size={12}
-                                      className={s <= review.rating ? 'text-amber-400 fill-amber-400' : 'text-gray-200'}
-                                    />
-                                  ))}
-                                </div>
-                                <div className="p-4 bg-emerald-50/40 rounded-2xl border border-emerald-50/50 relative">
-                                  <div className="absolute -left-1.5 top-4 w-3 h-3 bg-emerald-50/40 border-l border-b border-emerald-50/50 rotate-45"></div>
-                                  <p className="text-sm text-gray-700 leading-relaxed font-medium italic">
-                                    "{review.comment}"
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
+                  <div className="divide-y divide-gray-100">
+                    {reviews.map((review) => (
+                      <div key={review.id} className="py-4 first:pt-0 last:pb-0">
+                        <div className="flex items-start gap-3">
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-50 font-black text-emerald-700">
+                            {review.profiles?.full_name?.charAt(0).toUpperCase() || 'B'}
                           </div>
-                        ))}
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center justify-between gap-3">
+                              <h4 className="font-bold text-gray-900">{review.profiles?.full_name}</h4>
+                              <span className="text-xs text-gray-400">{new Date(review.created_at).toLocaleDateString('vi-VN')}</span>
+                            </div>
+                            <Stars value={review.rating} className="mt-1" size={13} />
+                            <p className="mt-2 rounded-md bg-gray-50 p-3 text-sm text-gray-600">{review.comment}</p>
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    ))}
                   </div>
                 </div>
               ) : (
-                <div className="py-16 text-center">
-                  <div className="w-20 h-20 bg-neutral-50 rounded-[2rem] flex items-center justify-center mx-auto mb-6 border-2 border-dashed border-neutral-200">
-                    <Star size={32} className="text-neutral-300" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-400 italic">Sản phẩm chưa có đánh giá nào</h3>
-                  <p className="text-gray-500 text-sm mt-2 max-w-sm mx-auto uppercase tracking-widest font-black opacity-50">
-                    Hãy là người đầu tiên trải nghiệm và chia sẻ cảm nhận về nông sản tuyệt vời này!
-                  </p>
+                <div className="py-10 text-center">
+                  <Star size={34} className="mx-auto mb-3 text-gray-300" />
+                  <p className="font-bold text-gray-400">Sản phẩm chưa có đánh giá nào</p>
                 </div>
               )}
-            </div>
-          </div>
+            </section>
+          </main>
 
-          {/* Right Column: Purchase Info */}
-          <div className="lg:col-span-1">
-            <div className="sticky top-24">
-              {/* Purchase Card */}
-              <div className="bg-white rounded-2xl shadow-xl border border-emerald-100 overflow-hidden mb-6">
-                <div className="p-6">
-                  <h1 className="text-2xl font-bold text-gray-900 mb-2">{product.title}</h1>
+          <aside className="space-y-6">
+            <section className="market-panel sticky top-28 overflow-hidden">
+              <div className="p-5">
+                <h1 className="text-2xl font-black leading-tight text-gray-900">{product.title}</h1>
+                <div className="mt-3 flex flex-wrap items-center gap-3">
+                  <Stars value={Number(rating)} />
+                  <span className="text-sm font-bold text-gray-900">{rating}</span>
+                  <span className="text-sm text-gray-400">•</span>
+                  <span className="text-sm font-semibold text-gray-500">{product.total_reviews || 0} đánh giá</span>
+                </div>
 
-                  {/* Real Rating Info */}
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="flex items-center gap-1">
-                      {[1, 2, 3, 4, 5].map((s) => (
-                        <Star
-                          key={s}
-                          size={16}
-                          className={s <= (product.average_rating || 5) ? 'text-amber-400 fill-amber-400' : 'text-gray-200'}
-                        />
-                      ))}
-                      <span className="ml-2 font-bold text-gray-900">
-                        {product.average_rating > 0 ? Number(product.average_rating).toFixed(1) : '5.0'}
-                      </span>
-                    </div>
-                    <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
-                    <div className="text-sm text-gray-500 hover:text-emerald-600 cursor-pointer transition-colors">
-                      {product.total_reviews || 0} đánh giá thực tế
-                    </div>
+                <div className="mt-5">
+                  <span className="text-3xl font-black text-emerald-600">{formatCurrency(product.price_per_unit)}đ</span>
+                  <span className="ml-1 text-sm font-semibold text-gray-500">/{product.unit}</span>
+                  <p className="mt-1 text-xs font-semibold text-gray-400">Giá tham khảo, chưa bao gồm điều kiện giao hàng riêng.</p>
+                </div>
+
+                <div className="mt-5 space-y-3 border-y border-gray-100 py-4">
+                  <SummaryRow label="Tồn kho" value={`${product.quantity} ${product.unit}`} icon={Package} />
+                  <SummaryRow label="Đơn tối thiểu" value={`${minQty} ${product.unit}`} icon={Shield} />
+                  <SummaryRow label="Khu vực" value={product.province || product.profiles?.province || 'N/A'} icon={MapPin} />
+                </div>
+
+                <div className="mt-5">
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="text-sm font-bold text-gray-700">Số lượng</span>
+                    <span className="text-sm font-semibold text-gray-500">Tổng: {formatCurrency(calculateTotal())}đ</span>
                   </div>
-
-                  {/* Price Section */}
-                  <div className="mb-6">
-                    <div className="flex items-baseline gap-2 mb-2">
-                      <span className="text-3xl font-black text-emerald-600">
-                        {formatCurrency(product.price_per_unit)}
-                        <span className="text-lg font-semibold text-gray-500">₫</span>
-                      </span>
-                      <span className="text-gray-500 text-sm">/{product.unit}</span>
-                    </div>
-                    <p className="text-sm text-gray-500">Giá đã bao gồm VAT</p>
+                  <div className="grid grid-cols-[44px_1fr_44px] overflow-hidden rounded-md border border-gray-200 bg-gray-50">
+                    <button onClick={() => setSelectedQuantity(q => Math.max(minQty, q - 1))} className="h-11 bg-white font-black text-gray-600 hover:bg-emerald-50">-</button>
+                    <div className="flex h-11 items-center justify-center font-black text-gray-900">{selectedQuantity} <span className="ml-1 text-sm text-gray-500">{product.unit}</span></div>
+                    <button onClick={() => setSelectedQuantity(q => Math.min(product.quantity, q + 1))} className="h-11 bg-white font-black text-gray-600 hover:bg-emerald-50">+</button>
                   </div>
+                </div>
 
-                  {/* Stats */}
-                  <div className="space-y-4 mb-6">
-                    <div className="flex justify-between items-center">
-                      <div className="text-sm text-gray-500">Tồn kho</div>
-                      <div className="flex items-center gap-2">
-                        <Package size={16} className="text-emerald-500" />
-                        <span className="font-bold text-gray-800">
-                          {product.quantity} {product.unit}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="flex justify-between items-center">
-                      <div className="text-sm text-gray-500">Đơn tối thiểu</div>
-                      <div className="font-bold text-gray-800">
-                        {product.min_order_quantity || 1} {product.unit}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Quantity Selector */}
-                  <div className="mb-8">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-sm font-semibold text-gray-700">Số lượng</span>
-                      <span className="text-sm text-gray-500">Tổng: {formatCurrency(calculateTotal())}₫</span>
-                    </div>
-                    <div className="flex items-center border border-emerald-200 rounded-xl overflow-hidden bg-emerald-50">
-                      <button
-                        onClick={() => setSelectedQuantity(q => Math.max(product.min_order_quantity || 1, q - 1))}
-                        className="w-12 h-12 bg-white hover:bg-emerald-50 flex items-center justify-center text-gray-600 hover:text-emerald-600 border-r border-emerald-200 text-lg font-bold"
-                      >
-                        -
-                      </button>
-                      <div className="flex-1 text-center">
-                        <span className="text-xl font-bold text-gray-800">{selectedQuantity}</span>
-                        <span className="text-sm text-gray-500 ml-1">{product.unit}</span>
-                      </div>
-                      <button
-                        onClick={() => setSelectedQuantity(q => Math.min(product.quantity, q + 1))}
-                        className="w-12 h-12 bg-white hover:bg-emerald-50 flex items-center justify-center text-gray-600 hover:text-emerald-600 border-l border-emerald-200 text-lg font-bold"
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="space-y-3">
+                <div className="mt-5 space-y-3">
+                  <button onClick={() => user ? setShowOrderForm(true) : navigate('/login')} className="market-button h-11 w-full text-sm">
+                    <ShoppingCart size={18} /> Mua ngay
+                  </button>
+                  <div className="grid grid-cols-2 gap-2">
                     <button
-                      onClick={() => user ? setShowOrderForm(true) : navigate('/login')}
-                      className="w-full py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl font-bold hover:from-emerald-600 hover:to-emerald-700 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 active:scale-95"
+                      onClick={() => {
+                        if (!user) return navigate('/login')
+                        addToCart(product, selectedQuantity)
+                      }}
+                      className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-emerald-200 bg-white text-sm font-bold text-emerald-700 hover:bg-emerald-50"
                     >
-                      <div className="flex items-center justify-center gap-2">
-                        <ShoppingCart size={20} />
-                        MUA NGAY
-                      </div>
+                      <ShoppingCart size={16} /> Giỏ hàng
                     </button>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <button
-                        onClick={() => {
-                          if (!user) {
-                            navigate('/login')
-                            return
-                          }
-                          addToCart(product, selectedQuantity)
-                        }}
-                        className="py-3 bg-white border-2 border-emerald-500 text-emerald-600 rounded-xl font-bold hover:bg-emerald-50 transition-all flex items-center justify-center gap-2"
-                      >
-                        <ShoppingCart size={18} />
-                        Giỏ hàng
-                      </button>
-
-                      <button
-                        onClick={handleWishlistToggle}
-                        disabled={wishlistLoading}
-                        className={`py-3 border-2 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${isInWishlist
-                          ? 'bg-pink-50 border-pink-500 text-pink-600 hover:bg-pink-100'
-                          : 'bg-white border-emerald-500 text-emerald-600 hover:bg-emerald-50'
-                          } disabled:opacity-50`}
-                      >
-                        <Heart size={18} className={isInWishlist ? 'fill-pink-500' : ''} />
-                        {isInWishlist ? 'Đã thích' : 'Yêu thích'}
-                      </button>
-                    </div>
-
-                    <div className="w-full">
-                      <ChatButton
-                        farmerId={product.farmer_id}
-                        buyerId={user?.id}
-                        productId={product.id}
-                        productTitle={product.title}
-                        className="w-full py-3"
-                      />
-                    </div>
+                    <button
+                      onClick={handleWishlistToggle}
+                      disabled={wishlistLoading}
+                      className={`inline-flex h-10 items-center justify-center gap-2 rounded-md border text-sm font-bold ${
+                        isInWishlist ? 'border-pink-200 bg-pink-50 text-pink-600' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
+                      }`}
+                    >
+                      <Heart size={16} className={isInWishlist ? 'fill-pink-500' : ''} /> {isInWishlist ? 'Đã thích' : 'Yêu thích'}
+                    </button>
                   </div>
+                  <ChatButton farmerId={product.farmer_id} buyerId={user?.id} productId={product.id} productTitle={product.title} className="w-full py-3" />
+                </div>
+              </div>
+            </section>
+
+            <section className="market-panel p-5">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 font-black text-emerald-700">
+                  {product.profiles?.full_name?.charAt(0).toUpperCase() || 'N'}
+                </div>
+                <div className="min-w-0">
+                  <h3 className="truncate font-black text-gray-900">{product.profiles?.full_name}</h3>
+                  <p className="mt-1 flex items-center gap-1 text-sm text-gray-500">
+                    <MapPin size={13} /> {product.profiles?.province || product.province}
+                  </p>
                 </div>
               </div>
 
-              {/* Farmer Info Card */}
-              <div className="bg-white rounded-2xl shadow-lg border border-emerald-100 p-6">
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="relative">
-                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-100 to-sky-100 flex items-center justify-center text-emerald-600 font-bold text-xl">
-                      {product.profiles?.full_name?.charAt(0).toUpperCase() || 'N'}
-                    </div>
-                    <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-400 rounded-full border-2 border-white"></div>
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-bold text-gray-800">{product.profiles?.full_name}</h3>
-                      {product.profiles?.verification_status === 'verified' && (
-                        <Shield size={14} className="text-emerald-500" />
-                      )}
-                    </div>
-                    <div className="flex items-center gap-1 text-sm text-gray-500 mt-1">
-                      <MapPin size={14} />
-                      {product.profiles?.province}
-                    </div>
-                  </div>
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                <div className="rounded-md bg-gray-50 p-3 text-center">
+                  <div className="text-xl font-black text-emerald-600">{farmerStats?.activeProducts || 0}</div>
+                  <div className="text-xs font-semibold text-gray-500">Sản phẩm</div>
                 </div>
-
-                {/* Farmer Stats */}
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div className="bg-emerald-50 rounded-lg p-3 text-center">
-                    <div className="text-lg font-bold text-emerald-600">{farmerStats?.activeProducts || 0}</div>
-                    <div className="text-xs text-gray-600">Sản phẩm</div>
-                  </div>
-                  <div className="bg-sky-50 rounded-lg p-3 text-center">
-                    <div className="text-lg font-bold text-sky-600">
-                      {product.profiles?.rating > 0 ? Number(product.profiles.rating).toFixed(1) : '5.0'}
-                    </div>
-                    <div className="text-xs text-gray-600">Đánh giá</div>
-                  </div>
+                <div className="rounded-md bg-gray-50 p-3 text-center">
+                  <div className="text-xl font-black text-emerald-600">5.0</div>
+                  <div className="text-xs font-semibold text-gray-500">Đánh giá</div>
                 </div>
-
-                {/* Contact Info */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-500">Điện thoại:</span>
-                    <span className="font-medium text-gray-800 italic">
-                      {product.profiles?.phone
-                        ? "**********"
-                        : 'Chưa cập nhật'}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-500">Tham gia:</span>
-                    <span className="font-medium text-gray-800">6 tháng</span>
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => navigate(`/farmers/${product.profiles?.id}`)}
-                  className="w-full mt-4 py-2.5 text-sm font-semibold text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors"
-                >
-                  Xem trang nông dân →
-                </button>
               </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Bottom CTA */}
-      <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white mt-12">
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div>
-              <h3 className="text-xl font-bold mb-2">Cần tư vấn thêm về sản phẩm?</h3>
-              <p className="text-emerald-100">Đội ngũ AgriFlow luôn sẵn sàng hỗ trợ bạn 24/7</p>
-            </div>
-            <div className="flex gap-3">
-              <ChatButton
-                farmerId={product.farmer_id}
-                buyerId={user?.id}
-                productId={product.id}
-                productTitle={product.title}
-                className="px-6 py-3 bg-white text-emerald-600 rounded-xl font-bold hover:bg-emerald-50 transition-all shadow-lg"
-              />
-              <button
-                onClick={() => navigate('/support')}
-                className="px-6 py-3 border-2 border-white text-white rounded-xl font-bold hover:bg-white/10 transition-all"
-              >
-                Gọi hỗ trợ
-              </button>
-            </div>
-          </div>
+            </section>
+          </aside>
         </div>
       </div>
     </div>
   )
 }
+
+const InfoItem = ({ icon: Icon, label, value }) => (
+  <div className="flex items-center gap-3 rounded-md bg-gray-50 p-4">
+    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-white text-emerald-600">
+      <Icon size={19} />
+    </div>
+    <div>
+      <p className="text-xs font-black uppercase tracking-wide text-gray-400">{label}</p>
+      <p className="mt-1 font-bold text-gray-900">{value}</p>
+    </div>
+  </div>
+)
+
+const SummaryRow = ({ icon: Icon, label, value }) => (
+  <div className="flex items-center justify-between gap-4 text-sm">
+    <span className="flex items-center gap-2 text-gray-500"><Icon size={15} /> {label}</span>
+    <span className="font-black text-gray-900">{value}</span>
+  </div>
+)
+
+const Stars = ({ value, className = '', size = 16 }) => (
+  <div className={`flex gap-1 ${className}`}>
+    {[1, 2, 3, 4, 5].map((s) => (
+      <Star key={s} size={size} className={s <= value ? 'fill-amber-400 text-amber-400' : 'text-gray-200'} />
+    ))}
+  </div>
+)
 
 export default PublicProductDetail

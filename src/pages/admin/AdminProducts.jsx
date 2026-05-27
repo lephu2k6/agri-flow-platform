@@ -1,25 +1,32 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import {
-    Package, Search, Filter, CheckCircle2, XCircle,
-    MoreVertical, Eye, Image as ImageIcon, MapPin,
-    Tag, Star, AlertCircle, ShoppingBag, Clock
-} from 'lucide-react';
-import { supabase } from '../../lib/supabase';
-import toast from 'react-hot-toast';
+    Package, Search, CheckCircle2, XCircle, Eye,
+    MapPin, AlertCircle, ShoppingBag, Clock, RefreshCw, Archive
+} from 'lucide-react'
+import { supabase } from '../../lib/supabase'
+import toast from 'react-hot-toast'
+
+const statusConfig = {
+    available: { label: 'Đang bán', className: 'bg-emerald-50 text-emerald-700 border-emerald-100', icon: CheckCircle2 },
+    draft: { label: 'Chờ duyệt', className: 'bg-amber-50 text-amber-700 border-amber-100', icon: Clock },
+    out_of_stock: { label: 'Hết hàng', className: 'bg-rose-50 text-rose-700 border-rose-100', icon: AlertCircle },
+    archived: { label: 'Đã ẩn', className: 'bg-gray-50 text-gray-700 border-gray-200', icon: XCircle }
+}
 
 const AdminProducts = () => {
-    const [products, setProducts] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [filterStatus, setFilterStatus] = useState('all');
+    const [products, setProducts] = useState([])
+    const [loading, setLoading] = useState(true)
+    const [filterStatus, setFilterStatus] = useState('all')
+    const [searchTerm, setSearchTerm] = useState('')
 
     useEffect(() => {
-        fetchProducts();
-    }, []);
+        fetchProducts()
+    }, [])
 
     const fetchProducts = async () => {
         try {
-            setLoading(true);
+            setLoading(true)
             const { data, error } = await supabase
                 .from('products')
                 .select(`
@@ -28,207 +35,235 @@ const AdminProducts = () => {
                     profiles:farmer_id (full_name),
                     product_images (image_url, is_primary)
                 `)
-                .order('created_at', { ascending: false });
+                .order('created_at', { ascending: false })
 
-            if (error) throw error;
-            setProducts(data || []);
+            if (error) throw error
+            setProducts(data || [])
         } catch (error) {
-            console.error('Error fetching admin products:', error);
-            toast.error('Không thể tải danh sách sản phẩm');
+            console.error('Error fetching admin products:', error)
+            toast.error('Không thể tải danh sách sản phẩm')
         } finally {
-            setLoading(false);
+            setLoading(false)
         }
-    };
+    }
 
     const getImageUrl = (product) => {
         if (product.product_images && product.product_images.length > 0) {
-            const primaryImage = product.product_images.find(img => img.is_primary);
-            return primaryImage?.image_url || product.product_images[0]?.image_url;
+            const primaryImage = product.product_images.find(img => img.is_primary)
+            return primaryImage?.image_url || product.product_images[0]?.image_url
         }
-        return 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=800';
-    };
+        return 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=800'
+    }
 
     const handleApprove = async (productId) => {
         try {
-            const { error } = await supabase
-                .from('products')
-                .update({ status: 'available' })
-                .eq('id', productId);
-
-            if (error) throw error;
-            toast.success('Duyệt sản phẩm thành công!');
-            fetchProducts();
+            const { error } = await supabase.from('products').update({ status: 'available' }).eq('id', productId)
+            if (error) throw error
+            toast.success('Duyệt sản phẩm thành công')
+            fetchProducts()
         } catch (error) {
-            toast.error('Lỗi khi duyệt sản phẩm');
+            toast.error('Lỗi khi duyệt sản phẩm')
         }
-    };
+    }
 
     const handleReject = async (productId) => {
         try {
-            const { error } = await supabase
-                .from('products')
-                .update({ status: 'archived' })
-                .eq('id', productId);
-
-            if (error) throw error;
-            toast.success('Đã ẩn sản phẩm');
-            fetchProducts();
+            const { error } = await supabase.from('products').update({ status: 'archived' }).eq('id', productId)
+            if (error) throw error
+            toast.success('Đã ẩn sản phẩm')
+            fetchProducts()
         } catch (error) {
-            toast.error('Lỗi khi ẩn sản phẩm');
+            toast.error('Lỗi khi ẩn sản phẩm')
         }
-    };
+    }
 
-    const filteredProducts = products.filter(p => filterStatus === 'all' || p.status === filterStatus);
+    const filteredProducts = products.filter((product) => {
+        const keyword = searchTerm.trim().toLowerCase()
+        const matchesStatus = filterStatus === 'all' || product.status === filterStatus
+        const matchesSearch = !keyword ||
+            product.title?.toLowerCase().includes(keyword) ||
+            product.profiles?.full_name?.toLowerCase().includes(keyword) ||
+            product.categories?.name?.toLowerCase().includes(keyword)
+        return matchesStatus && matchesSearch
+    })
 
-    const getStatusBadge = (status) => {
-        const config = {
-            available: { label: 'Đang bán', color: 'emerald', icon: CheckCircle2 },
-            draft: { label: 'Chờ duyệt', color: 'amber', icon: Clock },
-            out_of_stock: { label: 'Hết hàng', color: 'rose', icon: AlertCircle },
-            archived: { label: 'Đã ẩn', color: 'gray', icon: XCircle }
-        };
-        const item = config[status] || config.archived;
-        return (
-            <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-${item.color}-50 text-${item.color}-600 border border-${item.color}-200/50`}>
-                <item.icon size={12} />
-                <span>{item.label}</span>
-            </div>
-        );
-    };
+    const pendingCount = products.filter(p => p.status === 'draft').length
+    const activeCount = products.filter(p => p.status === 'available').length
+    const archivedCount = products.filter(p => p.status === 'archived').length
 
     return (
-        <div className="space-y-8 animate-in slide-in-from-right-4 duration-500">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                <div>
-                    <h1 className="text-3xl font-black text-gray-900 tracking-tight flex items-center gap-4">
-                        <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-lg text-amber-600 border border-amber-50">
-                            <Package size={24} />
-                        </div>
-                        Kiểm duyệt sản phẩm
-                    </h1>
-                    <p className="text-gray-500 font-medium ml-16 -mt-3">Quản lý nội dung, chất lượng nông sản trước khi công khai lên sàn.</p>
+        <div className="space-y-6">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div className="flex items-center gap-3">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-md bg-emerald-50 text-emerald-600">
+                        <Package size={24} />
+                    </div>
+                    <div>
+                        <h1 className="market-heading text-2xl">Kiểm duyệt sản phẩm</h1>
+                        <p className="text-sm text-gray-500">Quản lý chất lượng, trạng thái hiển thị và nội dung sản phẩm trên sàn.</p>
+                    </div>
                 </div>
+                <button onClick={fetchProducts} className="inline-flex h-10 items-center gap-2 rounded-md border border-gray-200 bg-white px-4 text-sm font-bold text-gray-600 hover:bg-gray-50">
+                    <RefreshCw size={16} /> Làm mới
+                </button>
+            </div>
 
-                <div className="flex items-center gap-2 bg-white p-2 rounded-2xl shadow-sm border border-gray-100 overflow-x-auto scrollbar-hide">
-                    {['all', 'draft', 'available', 'out_of_stock'].map((s) => (
-                        <button
-                            key={s}
-                            onClick={() => setFilterStatus(s)}
-                            className={`px-4 py-2 text-xs font-black rounded-xl transition-all whitespace-nowrap ${filterStatus === s
-                                ? 'bg-amber-500 text-white shadow-md'
-                                : 'text-gray-500 hover:bg-gray-50'
+            <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+                <Metric icon={Package} label="Tổng sản phẩm" value={products.length} />
+                <Metric icon={Clock} label="Chờ duyệt" value={pendingCount} />
+                <Metric icon={CheckCircle2} label="Đang bán" value={activeCount} />
+                <Metric icon={Archive} label="Đã ẩn" value={archivedCount} />
+            </div>
+
+            <div className="market-panel p-4">
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="relative max-w-xl flex-1">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                        <input
+                            type="text"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            placeholder="Tìm sản phẩm, người bán, danh mục..."
+                            className="market-input h-10 w-full pl-10 pr-4 text-sm"
+                        />
+                    </div>
+                    <div className="flex gap-2 overflow-x-auto">
+                        {['all', 'draft', 'available', 'out_of_stock', 'archived'].map((status) => (
+                            <button
+                                key={status}
+                                onClick={() => setFilterStatus(status)}
+                                className={`h-9 whitespace-nowrap rounded-md px-3 text-xs font-black uppercase ${
+                                    filterStatus === status
+                                        ? 'bg-emerald-600 text-white'
+                                        : 'border border-gray-200 bg-white text-gray-500 hover:border-emerald-200 hover:text-emerald-700'
                                 }`}
-                        >
-                            {s === 'all' ? 'Tất cả' : s === 'draft' ? 'Cần duyệt' : s === 'available' ? 'Đang bán' : 'Hết hàng'}
-                        </button>
+                            >
+                                {status === 'all' ? 'Tất cả' : statusConfig[status].label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+            {loading ? (
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                    {[...Array(6)].map((_, i) => <ProductSkeleton key={i} />)}
+                </div>
+            ) : filteredProducts.length === 0 ? (
+                <div className="market-panel border-dashed p-12 text-center">
+                    <Package size={42} className="mx-auto mb-3 text-gray-300" />
+                    <p className="font-bold text-gray-400">Không có sản phẩm phù hợp</p>
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                    {filteredProducts.map((product) => (
+                        <AdminProductCard
+                            key={product.id}
+                            product={product}
+                            imageUrl={getImageUrl(product)}
+                            onApprove={handleApprove}
+                            onReject={handleReject}
+                        />
                     ))}
                 </div>
+            )}
+        </div>
+    )
+}
+
+const AdminProductCard = ({ product, imageUrl, onApprove, onReject }) => {
+    const status = statusConfig[product.status] || statusConfig.archived
+    const StatusIcon = status.icon
+
+    return (
+        <div className="market-panel group overflow-hidden transition hover:border-emerald-200 hover:shadow-md">
+            <div className="relative h-48 overflow-hidden bg-gray-100">
+                <img src={imageUrl} alt={product.title} className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]" />
+                <div className="absolute left-3 top-3">
+                    <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-black uppercase ${status.className}`}>
+                        <StatusIcon size={12} /> {status.label}
+                    </span>
+                </div>
             </div>
 
-            {/* Products Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-                {loading ? (
-                    [...Array(6)].map((_, i) => (
-                        <div key={i} className="bg-white rounded-[2.5rem] p-6 animate-pulse opacity-50">
-                            <div className="h-48 bg-gray-200 rounded-3xl mb-4"></div>
-                            <div className="h-4 bg-gray-100 rounded w-3/4 mb-2"></div>
-                            <div className="h-4 bg-gray-50 rounded w-1/2"></div>
+            <div className="p-4">
+                <div className="mb-2 flex flex-wrap items-center gap-2">
+                    <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-bold text-gray-600">
+                        {product.categories?.name || 'Chưa phân loại'}
+                    </span>
+                    <span className="flex items-center gap-1 text-xs font-semibold text-gray-500">
+                        <MapPin size={12} /> {product.province || 'N/A'}
+                    </span>
+                </div>
+                <h3 className="line-clamp-2 min-h-11 text-base font-black text-gray-900">{product.title}</h3>
+
+                <div className="mt-4 grid grid-cols-2 gap-3">
+                    <InfoBox label="Giá bán" value={`${(product.price_per_unit || 0).toLocaleString('vi-VN')}đ/${product.unit || ''}`} />
+                    <InfoBox label="Tồn kho" value={`${product.quantity || 0} ${product.unit || ''}`} />
+                </div>
+
+                <div className="mt-4 flex items-center gap-2 text-xs font-semibold text-gray-500">
+                    <ShoppingBag size={13} className="text-emerald-500" />
+                    <span className="truncate">{product.profiles?.full_name || 'Người bán'}</span>
+                </div>
+
+                <div className="mt-4 flex items-center justify-between border-t border-gray-100 pt-4">
+                    <Link to={`/products/${product.id}`} className="inline-flex items-center gap-1 text-sm font-bold text-gray-600 hover:text-emerald-700">
+                        <Eye size={15} /> Xem công khai
+                    </Link>
+                    {product.status === 'draft' ? (
+                        <div className="flex gap-2">
+                            <button onClick={() => onReject(product.id)} className="rounded-md border border-gray-200 px-3 py-2 text-xs font-black text-gray-500 hover:bg-gray-50">
+                                Từ chối
+                            </button>
+                            <button onClick={() => onApprove(product.id)} className="rounded-md bg-emerald-600 px-3 py-2 text-xs font-black text-white hover:bg-emerald-700">
+                                Duyệt
+                            </button>
                         </div>
-                    ))
-                ) : filteredProducts.length === 0 ? (
-                    <div className="col-span-full py-20 text-center bg-white rounded-[2.5rem] border-2 border-dashed border-gray-200">
-                        <Package size={64} className="mx-auto text-gray-200 mb-4" />
-                        <p className="text-gray-400 font-bold italic text-lg uppercase tracking-widest">Chưa có sản phẩm nào cần xử lý</p>
-                    </div>
-                ) : (
-                    filteredProducts.map((p) => (
-                        <div key={p.id} className="bg-white rounded-[2.5rem] shadow-xl shadow-gray-100/20 border border-gray-100 overflow-hidden group hover:-translate-y-2 transition-all duration-500">
-                            {/* Product Image */}
-                            <div className="relative h-56">
-                                <img
-                                    src={getImageUrl(p)}
-                                    alt={p.title}
-                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                                />
-                                <div className="absolute top-4 left-4">
-                                    {getStatusBadge(p.status)}
-                                </div>
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-6">
-                                    <Link
-                                        to={`/products/${p.id}`}
-                                        className="w-full py-3 bg-white/20 backdrop-blur-md text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-white/40 transition-colors"
-                                    >
-                                        <Eye size={18} /> Xem chi tiết
-                                    </Link>
-                                </div>
-                            </div>
-
-                            {/* Info */}
-                            <div className="p-8">
-                                <div className="flex items-center gap-2 mb-3">
-                                    <span className="px-3 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-black rounded-full border border-emerald-100 uppercase tracking-widest">
-                                        {p.categories?.name || 'Chưa phân loại'}
-                                    </span>
-                                    <div className="flex items-center gap-1 text-amber-500 text-xs font-bold">
-                                        <Star size={12} fill="currentColor" /> {p.average_rating || 0}
-                                    </div>
-                                </div>
-                                <h3 className="text-xl font-black text-gray-900 line-clamp-1 mb-2 tracking-tight">{p.title}</h3>
-
-                                <div className="space-y-4 mb-6">
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-2xl font-black text-emerald-600 tracking-tighter">
-                                            {p.price_per_unit?.toLocaleString()}₫
-                                            <span className="text-xs text-gray-400 font-bold ml-1 tracking-normal">/{p.unit}</span>
-                                        </span>
-                                        <div className="text-right">
-                                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Tồn kho</p>
-                                            <p className="font-black text-gray-900">{p.quantity} {p.unit}</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-center gap-4 text-xs font-bold text-gray-500 pt-4 border-t border-gray-50">
-                                        <div className="flex items-center gap-1.5">
-                                            <MapPin size={14} className="text-gray-300" /> {p.province}
-                                        </div>
-                                        <div className="flex items-center gap-1.5 ml-auto">
-                                            <ShoppingBag size={14} className="text-gray-300" /> {p.profiles?.full_name}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Approval Actions */}
-                                {p.status === 'draft' ? (
-                                    <div className="grid grid-cols-2 gap-3 pt-4">
-                                        <button
-                                            onClick={() => handleReject(p.id)}
-                                            className="py-3 px-4 bg-gray-50 text-gray-500 rounded-2xl font-black text-xs hover:bg-gray-100 transition-all uppercase tracking-widest"
-                                        >
-                                            Từ chối
-                                        </button>
-                                        <button
-                                            onClick={() => handleApprove(p.id)}
-                                            className="py-3 px-4 bg-emerald-600 text-white rounded-2xl font-black text-xs hover:bg-emerald-700 shadow-xl shadow-emerald-100 transition-all uppercase tracking-widest"
-                                        >
-                                            Duyệt phẩm
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <button
-                                        onClick={() => handleReject(p.id)}
-                                        className="w-full py-4 border-2 border-dashed border-gray-200 text-gray-400 rounded-2xl font-black text-xs hover:border-red-500 hover:text-red-500 hover:bg-red-50 transition-all uppercase tracking-widest flex items-center justify-center gap-2"
-                                    >
-                                        <XCircle size={16} /> Ẩn sản phẩm
-                                    </button>
-                                )}
-                            </div>
-                        </div>
-                    ))
-                )}
+                    ) : (
+                        <button onClick={() => onReject(product.id)} className="inline-flex items-center gap-1 rounded-md border border-gray-200 px-3 py-2 text-xs font-black text-gray-500 hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700">
+                            <XCircle size={14} /> Ẩn
+                        </button>
+                    )}
+                </div>
             </div>
         </div>
-    );
-};
+    )
+}
 
-export default AdminProducts;
+const Metric = ({ icon: Icon, label, value }) => (
+    <div className="market-panel p-4">
+        <div className="flex items-start justify-between">
+            <div>
+                <p className="text-xs font-bold uppercase tracking-wide text-gray-400">{label}</p>
+                <p className="mt-2 text-2xl font-black text-gray-900">{value}</p>
+            </div>
+            <div className="flex h-10 w-10 items-center justify-center rounded-md bg-emerald-50 text-emerald-600">
+                <Icon size={20} />
+            </div>
+        </div>
+    </div>
+)
+
+const InfoBox = ({ label, value }) => (
+    <div className="rounded-md bg-gray-50 p-3">
+        <p className="text-xs font-semibold text-gray-500">{label}</p>
+        <p className="mt-1 text-sm font-black text-gray-900">{value}</p>
+    </div>
+)
+
+const ProductSkeleton = () => (
+    <div className="market-panel animate-pulse overflow-hidden">
+        <div className="h-48 bg-gray-100" />
+        <div className="space-y-3 p-4">
+            <div className="h-4 w-2/3 rounded bg-gray-100" />
+            <div className="h-4 w-1/2 rounded bg-gray-100" />
+            <div className="grid grid-cols-2 gap-3">
+                <div className="h-14 rounded bg-gray-100" />
+                <div className="h-14 rounded bg-gray-100" />
+            </div>
+        </div>
+    </div>
+)
+
+export default AdminProducts

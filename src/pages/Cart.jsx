@@ -67,6 +67,29 @@ const Cart = () => {
       }
 
       clearCart()
+
+      if (deliveryInfo.payment_method === 'vn_pay') {
+        try {
+          const orderId = results[0].data[0].id;
+          const res = await fetch('/api/create_payment_url', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              orderId: orderId,
+              amount: getCartTotal()
+            })
+          });
+          const vnpayData = await res.json();
+          if (vnpayData.url) {
+            window.location.href = vnpayData.url;
+            return;
+          }
+        } catch (err) {
+          console.error('VNPAY Error:', err);
+          toast.error('Không thể tạo link thanh toán VNPAY');
+        }
+      }
+
       toast.success('🎉 Đặt hàng thành công!')
       navigate('/buyer/orders')
     } catch (error) {
@@ -264,7 +287,7 @@ const Cart = () => {
                       className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm"
                     >
                       <option value="cash">Tiền mặt (COD)</option>
-                      <option value="bank">Chuyển khoản</option>
+                      <option value="vn_pay">Thanh toán qua VNPAY</option>
                     </select>
                   </div>
                 </div>

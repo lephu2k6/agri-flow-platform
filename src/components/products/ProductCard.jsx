@@ -1,15 +1,11 @@
+import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Package, MapPin, User, Star, Eye, ShoppingCart, Leaf, Truck, Clock, Shield } from 'lucide-react'
-import { useState } from 'react'
-import React from 'react'
+import { Package, MapPin, Star, ShoppingCart, Leaf, Truck, Clock, Shield } from 'lucide-react'
 
 const ProductCard = ({ product, showFarmerInfo = true, viewMode = 'grid' }) => {
   const [imageLoaded, setImageLoaded] = useState(false)
-  const [isHovered, setIsHovered] = useState(false)
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('vi-VN').format(amount)
-  }
+  const formatCurrency = (amount) => new Intl.NumberFormat('vi-VN').format(amount || 0)
 
   const getImageUrl = () => {
     if (product.product_images && product.product_images.length > 0) {
@@ -17,21 +13,17 @@ const ProductCard = ({ product, showFarmerInfo = true, viewMode = 'grid' }) => {
       return primaryImage?.image_url || product.product_images[0]?.image_url
     }
     if (product.images && product.images.length > 0) {
-      return product.images[0]
+      const primaryImage = product.images.find(img => img.isPrimary)
+      return primaryImage?.url || product.images[0]?.url || product.images[0]
     }
-    return 'https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=2070&auto=format&fit=crop'
-  }
-
-  const getFarmerRating = () => {
-    return product.profiles?.rating || 0
+    return 'https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1200&auto=format&fit=crop'
   }
 
   const getVerificationBadge = () => {
     if (product.profiles?.verification_status === 'verified') {
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs bg-emerald-100 text-emerald-700 font-semibold">
-          <Shield size={10} />
-          Đã xác minh
+        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700">
+          <Shield size={11} /> Đã xác minh
         </span>
       )
     }
@@ -41,305 +33,144 @@ const ProductCard = ({ product, showFarmerInfo = true, viewMode = 'grid' }) => {
   const getQualityBadge = () => {
     if (product.quality_standard === 'organic') {
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs bg-emerald-100 text-emerald-700 font-semibold">
-          <Leaf size={10} />
-          Hữu cơ
+        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700">
+          <Leaf size={11} /> Hữu cơ
         </span>
       )
     }
     if (product.quality_standard === 'grade_a') {
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs bg-amber-100 text-amber-700 font-semibold">
-          <Star size={10} />
-          Loại A
+        <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-bold text-amber-700">
+          <Star size={11} /> Loại A
         </span>
       )
     }
     return null
   }
 
-  // Grid View
-  if (viewMode === 'grid') {
+  if (viewMode === 'list') {
     return (
-      <Link to={`/products/${product.id}`}>
-        <div
-          className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden border border-emerald-100 hover:border-emerald-300 relative"
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
-        >
-          {/* Premium Badge */}
-          {product.is_featured && (
-            <div className="absolute top-3 left-3 z-10">
-              <div className="bg-gradient-to-r from-amber-500 to-amber-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
-                Nổi bật
+      <Link to={`/products/${product.id}`} className="market-panel block overflow-hidden transition hover:border-emerald-200 hover:shadow-md">
+        <div className="flex flex-col md:flex-row">
+          <ProductImage src={getImageUrl()} title={product.title} imageLoaded={imageLoaded} setImageLoaded={setImageLoaded} className="h-52 md:h-auto md:w-64" />
+
+          <div className="flex min-w-0 flex-1 flex-col justify-between p-4">
+            <div>
+              <div className="mb-2 flex flex-wrap items-center gap-2">
+                {product.categories?.name && <CategoryLabel name={product.categories.name} />}
+                {getQualityBadge()}
+              </div>
+              <h3 className="line-clamp-2 text-lg font-black text-gray-900 group-hover:text-emerald-700">{product.title}</h3>
+              <p className="mt-2 line-clamp-2 text-sm text-gray-500">{product.description}</p>
+              <div className="mt-3 flex flex-wrap gap-3 text-sm font-semibold text-gray-600">
+                <Meta icon={MapPin}>{product.province || 'Chưa cập nhật'}</Meta>
+                {product.harvest_date && <Meta icon={Clock}>{new Date(product.harvest_date).toLocaleDateString('vi-VN')}</Meta>}
+                <Meta icon={Truck}>Hệ thống gợi ý</Meta>
               </div>
             </div>
-          )}
 
-          {/* Image Container */}
-          <div className="relative h-52 overflow-hidden">
-            {/* Loading Skeleton */}
-            {!imageLoaded && (
-              <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 to-sky-50 animate-pulse" />
-            )}
-
-            {/* Product Image */}
-            <img
-              src={getImageUrl()}
-              alt={product.title}
-              className={`w-full h-full object-cover transition-all duration-700 ${imageLoaded ? 'opacity-100' : 'opacity-0'
-                } ${isHovered ? 'scale-110' : 'scale-100'}`}
-              onLoad={() => setImageLoaded(true)}
-            />
-
-            {/* Status Badge */}
-            <div className="absolute top-3 right-3 z-10">
-              {product.status === 'available' ? (
-                <span className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
-                  Đang bán
-                </span>
-              ) : (
-                <span className="bg-gradient-to-r from-amber-500 to-amber-600 text-white px-3 py-1 rounded-full text-xs font-bold">
-                  Hết hàng
-                </span>
-              )}
-            </div>
-
-            {/* Quick Actions Overlay */}
-            <div className={`absolute inset-0 bg-gradient-to-t from-black/30 via-black/0 to-transparent flex items-end justify-center transition-opacity duration-500 ${isHovered ? 'opacity-100' : 'opacity-0'
-              }`}>
-              <div className="w-full p-4 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-                <button className="w-full py-3 bg-white/90 backdrop-blur-sm rounded-xl font-bold text-emerald-700 flex items-center justify-center gap-2 shadow-lg hover:bg-white transition-all hover:scale-105">
-                  <Eye size={18} />
-                  Xem chi tiết
+            <div className="mt-4 flex flex-col gap-4 border-t border-gray-100 pt-4 sm:flex-row sm:items-end sm:justify-between">
+              <FarmerInfo product={product} showFarmerInfo={showFarmerInfo} badge={getVerificationBadge()} />
+              <div className="sm:text-right">
+                <Price product={product} formatCurrency={formatCurrency} />
+                <button className="market-button mt-3 h-9 px-4 text-sm">
+                  <ShoppingCart size={16} /> Xem chi tiết
                 </button>
               </div>
             </div>
-
-            {/* Harvest Time Badge */}
-            {product.harvest_date && (
-              <div className="absolute bottom-3 left-3">
-                <div className="bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg flex items-center gap-1 text-xs font-medium text-gray-700">
-                  <Clock size={10} />
-                  {new Date(product.harvest_date).toLocaleDateString('vi-VN')}
-                </div>
-              </div>
-            )}
           </div>
-
-          {/* Content */}
-          <div className="p-5">
-            {/* Title & Category */}
-            <div className="mb-3">
-              <div className="flex items-start justify-between">
-                <h3 className="text-lg font-bold text-gray-900 truncate group-hover:text-emerald-600 transition-colors">
-                  {product.title}
-                </h3>
-                {getQualityBadge()}
-              </div>
-              {product.categories?.name && (
-                <p className="text-sm text-emerald-500 font-medium mt-1 flex items-center gap-1">
-                  <Leaf size={12} />
-                  {product.categories.name}
-                </p>
-              )}
-            </div>
-
-            {/* Price & Quantity */}
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <span className="text-2xl font-black text-emerald-600">
-                  {formatCurrency(product.price_per_unit)}
-                  <span className="text-sm font-normal text-gray-500">/{product.unit}</span>
-                </span>
-              </div>
-              <div className="flex items-center gap-2 bg-emerald-50 px-3 py-1.5 rounded-full">
-                <Package size={16} className="text-emerald-600" />
-                <span className="text-sm font-medium text-emerald-700">
-                  {product.quantity} {product.unit}
-                </span>
-              </div>
-            </div>
-
-            {/* Location & Shipping */}
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2 text-gray-600">
-                <MapPin size={16} className="text-emerald-500" />
-                <span className="text-sm font-medium">{product.province}</span>
-              </div>
-              <div className="flex items-center gap-1 text-xs bg-sky-50 text-sky-600 px-2 py-1 rounded-full">
-                <Truck size={12} />
-                <span>Hệ thống gợi ý</span>
-              </div>
-            </div>
-
-            {/* Farmer Info */}
-            {showFarmerInfo && product.profiles && (
-              <div className="pt-4 border-t border-emerald-50">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-100 to-sky-100 flex items-center justify-center text-emerald-600 font-bold text-sm">
-                        {product.profiles.full_name?.charAt(0).toUpperCase() || 'N'}
-                      </div>
-                      <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full border-2 border-white"></div>
-                    </div>
-                    <div>
-                      <div className="font-medium text-gray-800 text-sm">
-                        {product.profiles.full_name}
-                      </div>
-                      {getVerificationBadge()}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-1 bg-amber-50 px-2 py-1 rounded-lg">
-                    <Star size={14} className={`${product.average_rating > 0 ? 'text-amber-500 fill-current' : 'text-gray-300'}`} />
-                    <span className="text-sm font-bold text-gray-800">
-                      {product.average_rating > 0 ? Number(product.average_rating).toFixed(1) : '5.0'}
-                    </span>
-                    <span className="text-[10px] text-gray-400">({product.total_reviews || 0})</span>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Hover Effect Border */}
-          <div className={`absolute inset-0 rounded-2xl border-2 border-emerald-300 pointer-events-none transition-opacity duration-500 ${isHovered ? 'opacity-100' : 'opacity-0'
-            }`}></div>
         </div>
       </Link>
     )
   }
 
-  // List View
   return (
-    <Link to={`/products/${product.id}`}>
-      <div
-        className="group bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-emerald-100 hover:border-emerald-300 p-5"
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-      >
-        <div className="flex flex-col md:flex-row gap-5">
-          {/* Image */}
-          <div className="md:w-56 shrink-0">
-            <div className="relative h-48 md:h-full rounded-xl overflow-hidden">
-              <img
-                src={getImageUrl()}
-                alt={product.title}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              />
+    <Link to={`/products/${product.id}`} className="market-panel group block overflow-hidden transition hover:border-emerald-200 hover:shadow-md">
+      <ProductImage src={getImageUrl()} title={product.title} imageLoaded={imageLoaded} setImageLoaded={setImageLoaded} className="h-48" />
 
-              {/* Status Badge */}
-              {product.status === 'available' && (
-                <div className="absolute top-3 right-3">
-                  <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
-                    Đang bán
-                  </div>
-                </div>
-              )}
+      <div className="p-4">
+        <div className="mb-2 flex min-h-6 flex-wrap items-center gap-2">
+          {product.categories?.name && <CategoryLabel name={product.categories.name} />}
+          {getQualityBadge()}
+        </div>
 
-              {/* Premium Badge */}
-              {product.is_featured && (
-                <div className="absolute top-3 left-3">
-                  <div className="bg-gradient-to-r from-amber-500 to-amber-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
-                    Nổi bật
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+        <h3 className="line-clamp-2 min-h-11 text-base font-black leading-snug text-gray-900 group-hover:text-emerald-700">
+          {product.title}
+        </h3>
 
-          {/* Details */}
-          <div className="flex-1">
-            <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-              <div className="flex-1">
-                <div className="flex items-start justify-between mb-2">
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-900 group-hover:text-emerald-600 transition-colors">
-                      {product.title}
-                    </h3>
-                    {product.categories?.name && (
-                      <p className="text-sm text-emerald-500 font-medium mt-1 flex items-center gap-1">
-                        <Leaf size={12} />
-                        {product.categories.name}
-                      </p>
-                    )}
-                  </div>
-                  {getQualityBadge()}
-                </div>
+        <div className="mt-3">
+          <Price product={product} formatCurrency={formatCurrency} />
+        </div>
 
-                <div className="flex items-center gap-4 mb-3">
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <MapPin size={16} className="text-emerald-500" />
-                    <span className="text-sm font-medium">{product.province}</span>
-                  </div>
-                  {product.harvest_date && (
-                    <div className="flex items-center gap-1 text-sm text-gray-500">
-                      <Clock size={14} />
-                      {new Date(product.harvest_date).toLocaleDateString('vi-VN')}
-                    </div>
-                  )}
-                </div>
+        <div className="mt-3 grid grid-cols-2 gap-2 text-xs font-semibold text-gray-500">
+          <Meta icon={MapPin}>{product.province || 'N/A'}</Meta>
+          <Meta icon={Package}>{product.quantity || 0} {product.unit}</Meta>
+        </div>
 
-                <p className="text-gray-700 line-clamp-2 mb-4">
-                  {product.description}
-                </p>
-              </div>
-
-              <div className="md:text-right">
-                <div className="text-2xl font-black text-emerald-600 mb-1">
-                  {formatCurrency(product.price_per_unit)}
-                  <span className="text-sm font-normal text-gray-500">/{product.unit}</span>
-                </div>
-                <div className="flex items-center justify-end gap-2 text-emerald-700 mb-3">
-                  <Package size={16} />
-                  <span className="text-sm font-medium">Còn: {product.quantity} {product.unit}</span>
-                </div>
-                <div className="flex items-center justify-end gap-1 text-sm text-sky-600 mb-4">
-                  <Truck size={14} />
-                  <span>Hệ thống gợi ý</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between pt-4 border-t border-emerald-50">
-              <div className="flex items-center gap-3 mb-3 md:mb-0">
-                <div className="relative">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-100 to-sky-100 flex items-center justify-center text-emerald-600 font-bold">
-                    {product.profiles?.full_name?.charAt(0).toUpperCase() || 'N'}
-                  </div>
-                  <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full border-2 border-white"></div>
-                </div>
-                <div>
-                  <div className="font-bold text-gray-800">
-                    {product.profiles?.full_name}
-                  </div>
-                  <div className="flex items-center gap-2 mt-1">
-                    {getVerificationBadge()}
-                    <div className="flex items-center gap-1 bg-amber-50 px-2 py-1 rounded-lg">
-                      <Star size={12} className={`${product.average_rating > 0 ? 'text-amber-500 fill-current' : 'text-gray-300'}`} />
-                      <span className="text-xs font-bold text-gray-800">
-                        {product.average_rating > 0 ? Number(product.average_rating).toFixed(1) : '5.0'}
-                      </span>
-                      <span className="text-[10px] text-gray-500">({product.total_reviews || 0})</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <button className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl font-bold hover:from-emerald-600 hover:to-emerald-700 transition-all flex items-center gap-2 shadow-lg hover:shadow-xl group-hover:scale-105">
-                  <ShoppingCart size={18} />
-                  Xem chi tiết
-                </button>
-              </div>
-            </div>
-          </div>
+        <div className="mt-4 border-t border-gray-100 pt-3">
+          <FarmerInfo product={product} showFarmerInfo={showFarmerInfo} badge={getVerificationBadge()} compact />
         </div>
       </div>
     </Link>
+  )
+}
+
+const ProductImage = ({ src, title, imageLoaded, setImageLoaded, className }) => (
+  <div className={`relative overflow-hidden bg-gray-100 ${className}`}>
+    {!imageLoaded && <div className="absolute inset-0 animate-pulse bg-gray-100" />}
+    <img
+      src={src}
+      alt={title}
+      className={`h-full w-full object-cover transition duration-300 group-hover:scale-[1.03] ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+      onLoad={() => setImageLoaded(true)}
+    />
+    <div className="absolute right-3 top-3">
+      <span className="rounded-full bg-emerald-600 px-2.5 py-1 text-[11px] font-black uppercase text-white shadow-sm">
+        Đang bán
+      </span>
+    </div>
+  </div>
+)
+
+const CategoryLabel = ({ name }) => (
+  <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-bold text-gray-600">
+    <Leaf size={11} /> {name}
+  </span>
+)
+
+const Price = ({ product, formatCurrency }) => (
+  <div>
+    <span className="text-xl font-black text-emerald-600">{formatCurrency(product.price_per_unit)}</span>
+    <span className="ml-1 text-xs font-semibold text-gray-400">đ/{product.unit}</span>
+  </div>
+)
+
+const Meta = ({ icon: Icon, children }) => (
+  <span className="flex min-w-0 items-center gap-1.5">
+    <Icon size={13} className="shrink-0 text-emerald-500" />
+    <span className="truncate">{children}</span>
+  </span>
+)
+
+const FarmerInfo = ({ product, showFarmerInfo, badge, compact = false }) => {
+  if (!showFarmerInfo || !product.profiles) return null
+
+  return (
+    <div className="flex min-w-0 items-center justify-between gap-3">
+      <div className="flex min-w-0 items-center gap-2">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-xs font-black text-emerald-700">
+          {product.profiles.full_name?.charAt(0).toUpperCase() || 'N'}
+        </div>
+        <div className="min-w-0">
+          <p className="truncate text-sm font-bold text-gray-800">{product.profiles.full_name}</p>
+          {!compact && badge}
+        </div>
+      </div>
+      <div className="flex shrink-0 items-center gap-1 rounded-full bg-amber-50 px-2 py-1 text-xs font-black text-gray-700">
+        <Star size={12} className="fill-amber-400 text-amber-400" />
+        {product.average_rating > 0 ? Number(product.average_rating).toFixed(1) : '5.0'}
+      </div>
+    </div>
   )
 }
 

@@ -24,7 +24,11 @@ export const buyerService = {
         throw new Error(`Kho không đủ hàng (Chỉ còn ${product.quantity})`)
       }
 
-      const totalAmount = orderData.total_amount || (orderData.quantity * orderData.unit_price)
+      const baseAmount = orderData.quantity * orderData.unit_price
+      const commissionFee = baseAmount * 0.05
+      const platformFee = baseAmount * 0.02
+      const shippingFee = orderData.shipping_fee || 0
+      const totalAmount = baseAmount + shippingFee
 
       // 3. Chèn đơn hàng mới
       const { data, error } = await supabase
@@ -37,11 +41,15 @@ export const buyerService = {
           unit: orderData.unit,
           unit_price: orderData.unit_price,
           total_amount: totalAmount,
+          shipping_fee: shippingFee,
+          commission_fee: commissionFee,
+          platform_fee: platformFee,
           delivery_address: orderData.delivery_address,
           delivery_province: orderData.delivery_province,
           delivery_district: orderData.delivery_district,
           notes: orderData.notes,
           payment_method: orderData.payment_method,
+          payment_status: 'pending',
           status: 'pending' // Giá trị hợp lệ: pending, confirmed, shipped, shipping, completed, cancelled, processing
         }])
         .select()
@@ -57,7 +65,8 @@ export const buyerService = {
       return { success: true, data }
     } catch (error) {
       console.error('Create Order Error:', error)
-      return { success: false, error: error.message }
+      const errorMessage = error.message || (typeof error === 'object' ? JSON.stringify(error) : String(error));
+      return { success: false, error: errorMessage }
     }
   },
 

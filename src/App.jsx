@@ -35,6 +35,7 @@ import PublicProducts from "./pages/products/Product"
 import PublicProductDetail from "./pages/products/ProductDetail"
 import Wishlist from "./pages/Wishlist"
 import Chat from "./pages/Chat"
+import PaymentResult from "./pages/PaymentResult"
 
 // Admin Pages (Thêm mới)
 import AdminLayout from "./layouts/AdminLayout"
@@ -98,6 +99,7 @@ function AppContent() {
           <Route path="/products" element={<PublicProducts />} />
           <Route path="/products/:id" element={<PublicProductDetail />} />
           <Route path="/cart" element={<Cart />} />
+          <Route path="/payment-result" element={<PaymentResult />} />
           <Route
             path="/wishlist"
             element={

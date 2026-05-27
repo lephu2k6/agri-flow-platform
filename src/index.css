@@ -1,1 +1,99 @@
 @import "tailwindcss";
+
+@theme {
+  --color-emerald-50: #ecfdf5;
+  --color-emerald-100: #d1fae5;
+  --color-emerald-200: #a7f3d0;
+  --color-emerald-300: #6ee7b7;
+  --color-emerald-400: #34d399;
+  --color-emerald-500: #10b981;
+  --color-emerald-600: #059669;
+  --color-emerald-700: #047857;
+  --color-emerald-800: #065f46;
+  --color-emerald-900: #064e3b;
+
+  --color-green-50: #f0fdf4;
+  --color-green-100: #dcfce7;
+  --color-green-200: #bbf7d0;
+  --color-green-300: #86efac;
+  --color-green-400: #4ade80;
+  --color-green-500: #22c55e;
+  --color-green-600: #16a34a;
+  --color-green-700: #15803d;
+  --color-green-800: #166534;
+  --color-green-900: #14532d;
+}
+
+@layer base {
+  html {
+    background: #f3f4f8;
+  }
+
+  body {
+    background: #f3f4f8;
+    color: #1f2937;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+}
+
+@layer components {
+  .market-surface {
+    background: #f3f4f8;
+  }
+
+  .market-panel {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    box-shadow: 0 1px 2px rgb(15 23 42 / 0.04);
+  }
+
+  .market-heading {
+    color: #111827;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+
+  .market-accent-line {
+    width: 78px;
+    height: 1px;
+    background: #059669;
+  }
+
+  .market-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 4px;
+    background: #059669;
+    color: #ffffff;
+    font-weight: 700;
+    transition: background-color 160ms ease, box-shadow 160ms ease;
+  }
+
+  .market-button:hover {
+    background: #047857;
+    box-shadow: 0 8px 16px rgb(5 150 105 / 0.16);
+  }
+
+  .market-input {
+    border: 1px solid #d8dee8;
+    border-radius: 4px;
+    background: #f9fafb;
+    outline: none;
+    transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+  }
+
+  .market-input:focus {
+    border-color: #059669;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgb(5 150 105 / 0.12);
+  }
+}

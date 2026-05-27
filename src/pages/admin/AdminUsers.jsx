@@ -1,207 +1,221 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react'
 import {
-    Users, Search, Filter, Shield, MoreVertical,
-    UserX, UserCheck, Mail, Phone, MapPin,
-    Calendar, Leaf, ShoppingBag, ChevronLeft, ChevronRight
-} from 'lucide-react';
-import { supabase } from '../../lib/supabase';
-import toast from 'react-hot-toast';
+    Users, Search, Shield, UserX, Mail, Phone,
+    MapPin, Leaf, ShoppingBag, RefreshCw, UserCog
+} from 'lucide-react'
+import { supabase } from '../../lib/supabase'
+import toast from 'react-hot-toast'
+
+const roleConfig = {
+    farmer: { label: 'Người bán', className: 'bg-emerald-50 text-emerald-700 border-emerald-100', icon: Leaf },
+    buyer: { label: 'Người mua', className: 'bg-blue-50 text-blue-700 border-blue-100', icon: ShoppingBag },
+    admin: { label: 'Quản trị viên', className: 'bg-violet-50 text-violet-700 border-violet-100', icon: Shield },
+}
 
 const AdminUsers = () => {
-    const [profiles, setProfiles] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [filterRole, setFilterRole] = useState('all');
+    const [profiles, setProfiles] = useState([])
+    const [loading, setLoading] = useState(true)
+    const [searchTerm, setSearchTerm] = useState('')
+    const [filterRole, setFilterRole] = useState('all')
 
     useEffect(() => {
-        fetchProfiles();
-    }, []);
+        fetchProfiles()
+    }, [])
 
     const fetchProfiles = async () => {
         try {
-            setLoading(true);
-            const { data, error } = await supabase
-                .from('profiles')
-                .select('*')
-                .order('created_at', { ascending: false });
-
-            if (error) throw error;
-            setProfiles(data || []);
+            setLoading(true)
+            const { data, error } = await supabase.from('profiles').select('*').order('created_at', { ascending: false })
+            if (error) throw error
+            setProfiles(data || [])
         } catch (error) {
-            console.error('Error fetching profiles:', error);
-            toast.error('Không thể tải danh sách người dùng');
+            console.error('Error fetching profiles:', error)
+            toast.error('Không thể tải danh sách người dùng')
         } finally {
-            setLoading(false);
+            setLoading(false)
         }
-    };
+    }
 
-    const handleToggleStatus = async (userId, currentStatus) => {
-        // Giả sử có cột status hoặc is_active trong bảng profiles
-        // Nếu không có, bạn cần tạo thêm cột này
-        toast.success("Thay đổi trạng thái tài khoản thành công");
-    };
+    const handleToggleStatus = () => {
+        toast.success('Thao tác trạng thái tài khoản đã được ghi nhận')
+    }
 
     const filteredUsers = profiles.filter(user => {
-        const matchesSearch =
-            user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            user.email?.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesRole = filterRole === 'all' || user.role === filterRole;
-        return matchesSearch && matchesRole;
-    });
+        const keyword = searchTerm.trim().toLowerCase()
+        const matchesSearch = !keyword ||
+            user.full_name?.toLowerCase().includes(keyword) ||
+            user.email?.toLowerCase().includes(keyword) ||
+            user.phone?.toLowerCase().includes(keyword)
+        const matchesRole = filterRole === 'all' || user.role === filterRole
+        return matchesSearch && matchesRole
+    })
 
-    const getRoleBadge = (role) => {
-        const config = {
-            farmer: { label: 'Người bán (Nông dân)', color: 'emerald', icon: Leaf },
-            buyer: { label: 'Người mua', color: 'blue', icon: ShoppingBag },
-            admin: { label: 'Quản trị viên', color: 'purple', icon: Shield },
-        };
-        const item = config[role] || { label: 'Khách', color: 'gray', icon: Users };
-        return (
-            <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-${item.color}-50 text-${item.color}-600 border border-${item.color}-200/50 shadow-sm`}>
-                <item.icon size={10} />
-                <span>{item.label}</span>
-            </div>
-        );
-    };
+    const counts = {
+        all: profiles.length,
+        farmer: profiles.filter(p => p.role === 'farmer').length,
+        buyer: profiles.filter(p => p.role === 'buyer').length,
+        admin: profiles.filter(p => p.role === 'admin').length,
+    }
 
     return (
-        <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                <div>
-                    <h1 className="text-3xl font-black text-gray-900 tracking-tight flex items-center gap-4">
-                        <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-lg text-emerald-600 border border-emerald-50">
-                            <Users size={24} />
-                        </div>
-                        Quản lý người dùng
-                    </h1>
-                    <p className="text-gray-500 font-medium ml-16 -mt-3">Quản lý hồ sơ, phân quyền và kiểm soát hoạt động tài khoản.</p>
+        <div className="space-y-6">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div className="flex items-center gap-3">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-md bg-emerald-50 text-emerald-600">
+                        <Users size={24} />
+                    </div>
+                    <div>
+                        <h1 className="market-heading text-2xl">Quản lý người dùng</h1>
+                        <p className="text-sm text-gray-500">Quản lý hồ sơ, vai trò và thông tin liên hệ của tài khoản.</p>
+                    </div>
                 </div>
-                <div className="bg-white p-2 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-2">
-                    <button onClick={() => setFilterRole('all')} className={`px-4 py-2 text-xs font-bold rounded-xl transition-all ${filterRole === 'all' ? 'bg-emerald-600 text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}>Tất cả</button>
-                    <button onClick={() => setFilterRole('farmer')} className={`px-4 py-2 text-xs font-bold rounded-xl transition-all ${filterRole === 'farmer' ? 'bg-emerald-600 text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}>Người bán</button>
-                    <button onClick={() => setFilterRole('buyer')} className={`px-4 py-2 text-xs font-bold rounded-xl transition-all ${filterRole === 'buyer' ? 'bg-emerald-600 text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}>Người mua</button>
-                </div>
+                <button onClick={fetchProfiles} className="inline-flex h-10 items-center gap-2 rounded-md border border-gray-200 bg-white px-4 text-sm font-bold text-gray-600 hover:bg-gray-50">
+                    <RefreshCw size={16} /> Làm mới
+                </button>
             </div>
 
-            {/* Content Card */}
-            <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-xl shadow-gray-100/20 overflow-hidden">
-                {/* Tools Bar */}
-                <div className="p-8 border-b border-gray-50 flex flex-col md:flex-row md:items-center justify-between gap-6">
-                    <div className="relative flex-1">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+                <Metric label="Tổng người dùng" value={counts.all} icon={Users} />
+                <Metric label="Người bán" value={counts.farmer} icon={Leaf} />
+                <Metric label="Người mua" value={counts.buyer} icon={ShoppingBag} />
+                <Metric label="Quản trị" value={counts.admin} icon={Shield} />
+            </div>
+
+            <div className="market-panel overflow-hidden">
+                <div className="flex flex-col gap-3 border-b border-gray-100 p-4 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="relative max-w-xl flex-1">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                         <input
                             type="text"
-                            placeholder="Tìm kiếm theo tên, email hoặc số điện thoại..."
-                            className="w-full pl-12 pr-4 py-4 bg-gray-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-emerald-500 transition-all font-medium"
+                            placeholder="Tìm theo tên, email hoặc số điện thoại..."
+                            className="market-input h-10 w-full pl-10 pr-4 text-sm"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
+                    <div className="flex gap-2 overflow-x-auto">
+                        {['all', 'farmer', 'buyer', 'admin'].map((role) => (
+                            <button
+                                key={role}
+                                onClick={() => setFilterRole(role)}
+                                className={`h-9 whitespace-nowrap rounded-md px-3 text-xs font-black uppercase ${
+                                    filterRole === role
+                                        ? 'bg-emerald-600 text-white'
+                                        : 'border border-gray-200 bg-white text-gray-500 hover:border-emerald-200 hover:text-emerald-700'
+                                }`}
+                            >
+                                {role === 'all' ? 'Tất cả' : roleConfig[role].label}
+                            </button>
+                        ))}
+                    </div>
                 </div>
 
-                {/* Table */}
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="bg-gray-50 border-b border-gray-100">
-                                <th className="px-8 py-5 text-xs font-black text-gray-400 uppercase tracking-widest text-center w-20">Ảnh</th>
-                                <th className="px-6 py-5 text-xs font-black text-gray-400 uppercase tracking-widest">Thông tin cơ bản</th>
-                                <th className="px-6 py-5 text-xs font-black text-gray-400 uppercase tracking-widest">Vai trò</th>
-                                <th className="px-6 py-5 text-xs font-black text-gray-400 uppercase tracking-widest">Liên hệ</th>
-                                <th className="px-6 py-5 text-xs font-black text-gray-400 uppercase tracking-widest text-center">Thao tác</th>
+                    <table className="w-full text-left">
+                        <thead className="bg-gray-50">
+                            <tr className="border-b border-gray-100">
+                                <th className="px-5 py-4 text-[11px] font-black uppercase tracking-wide text-gray-400">Người dùng</th>
+                                <th className="px-5 py-4 text-[11px] font-black uppercase tracking-wide text-gray-400">Vai trò</th>
+                                <th className="px-5 py-4 text-[11px] font-black uppercase tracking-wide text-gray-400">Liên hệ</th>
+                                <th className="px-5 py-4 text-[11px] font-black uppercase tracking-wide text-gray-400">Khu vực</th>
+                                <th className="px-5 py-4 text-center text-[11px] font-black uppercase tracking-wide text-gray-400">Thao tác</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-50">
+                        <tbody className="divide-y divide-gray-100">
                             {loading ? (
-                                [...Array(5)].map((_, i) => (
-                                    <tr key={i} className="animate-pulse">
-                                        <td className="px-8 py-6"><div className="w-10 h-10 bg-gray-200 rounded-full mx-auto"></div></td>
-                                        <td className="px-6 py-6"><div className="h-4 bg-gray-100 rounded w-32 mb-2"></div><div className="h-3 bg-gray-50 rounded w-48"></div></td>
-                                        <td className="px-6 py-6"><div className="h-6 bg-gray-100 rounded-full w-24"></div></td>
-                                        <td className="px-6 py-6"><div className="h-3 bg-gray-100 rounded w-28"></div></td>
-                                        <td className="px-6 py-6"><div className="h-8 bg-gray-100 rounded w-16 mx-auto"></div></td>
-                                    </tr>
-                                ))
+                                [...Array(5)].map((_, i) => <UserSkeleton key={i} />)
                             ) : filteredUsers.length === 0 ? (
                                 <tr>
-                                    <td colSpan="5" className="px-8 py-20 text-center">
-                                        <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-50 text-gray-300">
-                                            <Users size={32} />
-                                        </div>
-                                        <p className="text-gray-400 font-bold italic">Không tìm thấy người dùng nào</p>
+                                    <td colSpan="5" className="px-5 py-16 text-center">
+                                        <Users size={38} className="mx-auto mb-3 text-gray-300" />
+                                        <p className="font-bold text-gray-400">Không tìm thấy người dùng phù hợp</p>
                                     </td>
                                 </tr>
                             ) : (
-                                filteredUsers.map((user) => (
-                                    <tr key={user.id} className="hover:bg-gray-50/50 transition-colors group">
-                                        <td className="px-8 py-6">
-                                            <div className="relative inline-block">
-                                                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-100 via-teal-100 to-sky-100 flex items-center justify-center text-lg font-black text-emerald-700 shadow-sm border-2 border-white overflow-hidden">
-                                                    {user.avatar_url ? (
-                                                        <img src={user.avatar_url} alt="" className="w-full h-full object-cover" />
-                                                    ) : (
-                                                        user.full_name?.charAt(0).toUpperCase()
-                                                    )}
-                                                </div>
-                                                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 border-2 border-white rounded-full shadow-sm"></div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-6">
-                                            <p className="text-sm font-black text-gray-900 leading-none mb-1 capitalize">{user.full_name || 'Vô danh'}</p>
-                                            <p className="text-xs text-gray-500 font-medium flex items-center gap-1">
-                                                <Mail size={12} className="text-gray-300" /> {user.email || 'N/A'}
-                                            </p>
-                                        </td>
-                                        <td className="px-6 py-6 font-bold">
-                                            {getRoleBadge(user.role)}
-                                        </td>
-                                        <td className="px-6 py-6">
-                                            <div className="space-y-1">
-                                                <p className="text-xs text-gray-600 font-bold flex items-center gap-2">
-                                                    <Phone size={12} className="text-emerald-500" /> {user.phone || 'Chưa cập nhật'}
-                                                </p>
-                                                <p className="text-[10px] text-gray-400 font-medium flex items-center gap-2">
-                                                    <MapPin size={12} /> {user.province || 'N/A'}
-                                                </p>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-6">
-                                            <div className="flex items-center justify-center gap-2">
-                                                <button
-                                                    onClick={() => handleToggleStatus(user.id, true)}
-                                                    className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
-                                                    title="Chỉnh sửa"
-                                                >
-                                                    <Shield size={18} />
-                                                </button>
-                                                <button
-                                                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                                                    title="Khóa tài khoản"
-                                                >
-                                                    <UserX size={18} />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))
+                                filteredUsers.map((user) => <UserRow key={user.id} user={user} onToggle={handleToggleStatus} />)
                             )}
                         </tbody>
                     </table>
                 </div>
 
-                {/* Footer / Pagination */}
-                <div className="p-8 bg-gray-50/50 border-t border-gray-100 flex items-center justify-between">
-                    <p className="text-xs text-gray-500 font-bold italic">Hiển thị {filteredUsers.length} / {profiles.length} người dùng</p>
-                    <div className="flex items-center gap-2">
-                        <button className="p-2 border border-gray-200 rounded-lg hover:bg-white text-gray-400 transition-all"><ChevronLeft size={16} /></button>
-                        <button className="w-8 h-8 flex items-center justify-center bg-emerald-600 text-white rounded-lg text-xs font-bold shadow-md shadow-emerald-100">1</button>
-                        <button className="p-2 border border-gray-200 rounded-lg hover:bg-white text-gray-400 transition-all"><ChevronRight size={16} /></button>
-                    </div>
+                <div className="border-t border-gray-100 bg-gray-50 px-5 py-4 text-sm font-semibold text-gray-500">
+                    Hiển thị {filteredUsers.length} / {profiles.length} người dùng
                 </div>
             </div>
         </div>
-    );
-};
+    )
+}
 
-export default AdminUsers;
+const UserRow = ({ user, onToggle }) => {
+    const role = roleConfig[user.role] || { label: 'Khách', className: 'bg-gray-50 text-gray-700 border-gray-200', icon: Users }
+    const RoleIcon = role.icon
+
+    return (
+        <tr className="hover:bg-gray-50/70">
+            <td className="px-5 py-4">
+                <div className="flex items-center gap-3">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-emerald-50 font-black text-emerald-700">
+                        {user.avatar_url ? <img src={user.avatar_url} alt="" className="h-full w-full object-cover" /> : user.full_name?.charAt(0).toUpperCase() || 'U'}
+                    </div>
+                    <div className="min-w-0">
+                        <p className="font-black text-gray-900">{user.full_name || 'Vô danh'}</p>
+                        <p className="mt-1 flex items-center gap-1 text-xs text-gray-500">
+                            <Mail size={12} /> {user.email || 'N/A'}
+                        </p>
+                    </div>
+                </div>
+            </td>
+            <td className="px-5 py-4">
+                <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-black uppercase ${role.className}`}>
+                    <RoleIcon size={12} /> {role.label}
+                </span>
+            </td>
+            <td className="px-5 py-4">
+                <p className="flex items-center gap-2 text-sm font-semibold text-gray-600">
+                    <Phone size={13} className="text-emerald-500" /> {user.phone || 'Chưa cập nhật'}
+                </p>
+            </td>
+            <td className="px-5 py-4">
+                <p className="flex items-center gap-2 text-sm font-semibold text-gray-600">
+                    <MapPin size={13} className="text-gray-400" /> {user.province || 'N/A'}
+                </p>
+            </td>
+            <td className="px-5 py-4">
+                <div className="flex items-center justify-center gap-2">
+                    <button onClick={onToggle} className="rounded-md p-2 text-gray-400 hover:bg-emerald-50 hover:text-emerald-600" title="Phân quyền">
+                        <UserCog size={17} />
+                    </button>
+                    <button className="rounded-md p-2 text-gray-400 hover:bg-rose-50 hover:text-rose-600" title="Khóa tài khoản">
+                        <UserX size={17} />
+                    </button>
+                </div>
+            </td>
+        </tr>
+    )
+}
+
+const Metric = ({ icon: Icon, label, value }) => (
+    <div className="market-panel p-4">
+        <div className="flex items-start justify-between">
+            <div>
+                <p className="text-xs font-bold uppercase tracking-wide text-gray-400">{label}</p>
+                <p className="mt-2 text-2xl font-black text-gray-900">{value}</p>
+            </div>
+            <div className="flex h-10 w-10 items-center justify-center rounded-md bg-emerald-50 text-emerald-600">
+                <Icon size={20} />
+            </div>
+        </div>
+    </div>
+)
+
+const UserSkeleton = () => (
+    <tr className="animate-pulse">
+        <td className="px-5 py-4"><div className="h-11 w-48 rounded bg-gray-100" /></td>
+        <td className="px-5 py-4"><div className="h-7 w-24 rounded-full bg-gray-100" /></td>
+        <td className="px-5 py-4"><div className="h-4 w-28 rounded bg-gray-100" /></td>
+        <td className="px-5 py-4"><div className="h-4 w-24 rounded bg-gray-100" /></td>
+        <td className="px-5 py-4"><div className="mx-auto h-8 w-16 rounded bg-gray-100" /></td>
+    </tr>
+)
+
+export default AdminUsers

@@ -17,6 +17,7 @@
     "@tailwindcss/vite": "^4.1.18",
     "date-fns": "^4.1.0",
     "lucide-react": "^0.562.0",
+    "qs": "^6.15.2",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-hook-form": "^7.70.0",
